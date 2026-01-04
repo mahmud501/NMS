@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}NMS - {{page_title}}{% endblock %}
+
+{% block content %}
+<div class="net-dashboard">
+    <h3>{{page_title}}</h3>
+</div>
+<div class="gap-view">
+</div>
+<div class="device-details">
+    <table class="device-table">
+        <thead>
+            <tr>
+                <th></th>
+                <th width="25%">Device/Location</th>
+                <th>Operating System/Hardware/Feature</th>
+                <th>Uptime/Hostname</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if devices %}
+                {% for d in devices %}
+                <tr>
+                    <td class="small-vendor-icon">
+                        <img src=" {% if d.vendor|lower=='cisco' %}/static/images/cisco.png
+                        {% elif d.vendor|lower=='mikrotik' %}/static/images/mikrotik.png
+                        {%elif d.vendor|lower=='linux'%}/static/images/linux.png
+                        {%else%}/static/images/router.png{% endif %}" alt="vendor_icon"></td>
+                    <td style="color: {% if d.status|lower =='up' %}blue{%else%}red{%endif%}">
+                        <a href="/devices/device/{{ d.device_id }}">{{d.ip_address}}</a>
+                        <p style="color: rgb(71, 68, 68);">{{d.location}}</p>
+                    </td>
+                    <td>
+                        <p>{{d.os_version}}</p>
+                        <p>{{d.model}}</p>
+                    </td>
+                    <td>
+                        <p>{{d.formatted_uptime}}</p>
+                        <p>{{d.hostname}}</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="4" style="text-align:center">No devices found</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+
+{% endblock%}

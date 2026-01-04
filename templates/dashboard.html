@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}NMS - Dashboard{% endblock %}
+
+{% block content %}
+<div class="net-dashboard">
+    <h3> Welcome to NMS DashBoard</h3>
+</div>
+<div class="gap-view"></div>
+
+<div class="summary-cards">
+    <div class="device-summary">
+        <table class="summary-table">
+            <tr>
+                <th style="width: 16%;"></th>
+                <th style="width: 10%;">Total</th>
+                <th style="width: 12%">Up</th>
+                <th>Down/Alert</th>
+                <th>Ignored</th>
+                <th>Disabled</th>
+            </tr>
+            <tr >
+                <td align="left"> <a href="/devices/all"><strong>Devices</strong></a></td>
+                <td>
+                    <a href="/devices/all" style="color: blue;">{{ devices|length }}
+                        </a>
+                    </td>
+                <td>
+                    <a href="/devices/up" style="color: green;">
+                    {{ devices | map(attribute="status") | map("lower") | select("equalto","up") | list | length }} up
+                    </a>
+                </td>
+                <td style="color:red">
+                    <a href="/devices/down" style="color: red;">
+                    {{  devices | map(attribute="status") | map("lower") | select("equalto","down") | list | length}} down
+                    </a>
+                </td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td align="left">Ports</td>
+                <td style="color:blue"> {{interfaces|length}} </td>
+                <td style="color:green">
+                    {{interfaces|map(attribute="oper_status")|map("lower")|select("equalto","up")|list|length}} up
+                </td>
+                <td style="color:red">
+                    {{interfaces|map(attribute="oper_status")|map("lower")|select("equalto","down")|list|length}} down
+                </td>
+                <td style="color:lightslategray"></td>
+                <td>{{interfaces|map(attribute="admin_status")|map("lower")|select("equalto","down")|list|length}} shutdown   
+                </td> 
+            </tr>
+        </table>
+    </div>
+    <div class="alert-summary">
+        <table class="summary-table">
+            <tr>
+                <th></th>
+                <th>Ok</th>
+                <th>Fail</th>
+                <th>Delay</th>
+                <th>Suppress</th>
+                <th>Other</th>
+            </tr>
+            <tr>
+                <td>Alerts</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
+    <!-- <div class="card">
+        <h2>Total Devices</h2>
+        <p>{{ devices|length }}</p>
+    </div>
+
+    <div class="card">
+        <h2>Up</h2>
+        <p style="color: green;">
+            {{ devices | map(attribute="status") | map("lower") | select("equalto","up") | list | length }}
+        </p>
+    </div>
+
+    <div class="card">
+        <h2>Down</h2>
+        <p style="color: red;">
+            {{  devices | map(attribute="status") | map("lower") | select("equalto","down") | list | length}}
+        </p>
+    </div>-->
+</div>
+
+<hr>
+
+<!-- <h2>Device Status</h2>
+
+<table border="1" cellpadding="8">
+    <tr>
+        <th>IP Address</th>
+        <th>Hostname</th>
+        <th>Status</th>
+    </tr>
+
+    {% for d in devices %}
+    <tr>
+        <td>{{ d.ip_address }}</td>
+        <td>{{ d.hostname }}</td>
+
+        <td style="color: {% if d.status|lower=='up' %}green{% else %}red{% endif %}">
+            {{ d.status | upper }}
+        </td>
+    </tr>
+    {% endfor %}
+</table> -->
+
+{% endblock %}

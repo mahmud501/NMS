@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Add Device{% endblock %}
+
+{% block content %}
+<div class="container p-4">
+
+    <h3>Add New Device</h3>
+    <hr>
+
+    {% if message %}
+    <div class="alert alert-info">{{ message }}</div>
+    {% endif %}
+
+    <form method="POST" action="/devices/add">
+
+        <div class="mb-3">
+            <label>IP Address</label>
+            <input type="text" name="ip_address" class="form-control" value="{{ ip_address }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label>SNMP Version</label>
+            <select name="snmp_version" id="snmp_version" class="form-control" required>
+                <option value="v1" {% if snmp_version == 'v1' %}selected{% endif %}>SNMPv1</option>
+                <option value="v2c" {% if snmp_version == 'v2c' %}selected{% endif %}>SNMPv2c</option>
+                <option value="v3" {% if snmp_version == 'v3' %}selected{% endif %}>SNMPv3</option>
+            </select>
+        </div>
+
+        <div class="snmpv1v2">
+            <div class="mb-3">
+                <label>Community (v1/v2c)</label>
+                <input type="text" name="community" class="form-control" value="{{ community }}">
+            </div>
+        </div>
+
+        <div class="snmpv3" style="display:none">
+            <label class="mb-3">Authentication Level</label>
+            <select name="auth_level" id = "auth_level" class="form-control">
+                <option value="" {% if not auth_level %}selected{% endif %}>noAuthNoPriv</option>
+                <option value="authNoPriv" {% if auth_level == 'authNoPriv' %}selected{% endif %}>authNoPriv</option>
+                <!-- <option value="authPriv">authPriv</option> -->
+            </select>
+        </div>
+        <div class="authnopriv" style="display: none">
+            <div class="mb-3">
+                <label>SNMPv3 Username</label>
+                <input type="text" name="v3_user" class="form-control" value="{{ v3_user }}">
+            </div>
+
+            <div class="mb-3">
+                <label>Auth Protocol</label>
+                <select name="auth_protocol" class="form-control">
+                    <option value="" {% if not auth_protocol %}selected{% endif %}>None</option>
+                    <option value="MD5" {% if auth_protocol == 'MD5' %}selected{% endif %}>MD5</option>
+                    <option value="SHA" {% if auth_protocol == 'SHA' %}selected{% endif %}>SHA</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label>Auth Password</label>
+                <input type="password" name="auth_password" class="form-control">
+            </div>
+        </div>
+        <div class="priv-protocol" style="display: none">
+            <div class="mb-3">
+                <label>Priv Protocol</label>
+                <select name="priv_protocol" class="form-control">
+                    <option value="" {% if not priv_protocol %}selected{% endif %}>None</option>
+                    <option value="DES" {% if priv_protocol == 'DES' %}selected{% endif %}>DES</option>
+                    <option value="AES" {% if priv_protocol == 'AES' %}selected{% endif %}>AES</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label>Priv Password</label>
+                <input type="password" name="priv_password" class="form-control">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Device</button>
+    </form>
+</div>
+
+<script>
+    const snmpVersion=document.getElementById("snmp_version");
+    const authLevel=document.getElementById("auth_level");
+    function updateForm(){
+        if (snmpVersion.value==="v3"){
+            document.querySelector(".snmpv3").style.display="block";
+            document.querySelector(".snmpv1v2").style.display = "none";  
+            if (authLevel.value==="authNoPriv"){
+                document.querySelector(".authnopriv").style.display ="block";
+                document.querySelector(".priv-protocol").style.display ="none";
+            }
+            else if (authLevel.value==="authPriv"){
+                document.querySelector(".authnopriv").style.display ="block";
+                document.querySelector(".priv-protocol").style.display ="block";
+            } else{
+                document.querySelector(".authnopriv").style.display ="none";
+                document.querySelector(".priv-protocol").style.display ="none";
+            }
+        } else {
+            document.querySelector(".snmpv3").style.display = "none";
+            document.querySelector(".snmpv1v2").style.display = "block";
+            document.querySelector(".authnopriv").style.display ="none";
+            document.querySelector(".priv-protocol").style.display ="none";
+        }
+
+    }
+    snmpVersion.addEventListener("change", updateForm);
+    authLevel.addEventListener("change", updateForm);
+
+    updateForm();
+//document.getElementById("snmp_version").addEventListener("change", function() {
+//let v=this.value;
+/*
+    if (v === "v3") {
+        document.querySelector(".snmpv3").style.display = "block";
+        document.querySelector(".snmpv1v2").style.display = "none";
+    } else {
+        document.querySelector(".snmpv3").style.display = "none";
+        document.querySelector(".snmpv1v2").style.display = "block";
+    }
+});*/
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}NMS - {{page_title}}{% endblock %}
+
+{% block content %}
+
+<div class="gap-view"></div>
+
+<div class="device-detail-brief">
+    <div class="medium-vendor-icon">
+        <img src=" {% if device.vendor|lower=='cisco' %}/static/images/cisco.png
+                    {% elif device.vendor|lower=='mikrotik' %}/static/images/mikrotik.png
+                    {%elif device.vendor|lower=='linux'%}/static/images/linux.png
+                    {%else%}/static/images/router.png{% endif %}" alt="vendor_icon">
+    </div>
+    <div class="device-ip-brief-1">
+        <a href="/devices/device/{{device.device_id}}">{{device.ip_address}}</a>
+        <p>{% if device.location|lower!='none' %}{{device.location}}{% endif %}</p>
+    </div>
+    <div class="device-graph-brief-1">
+        <div>
+            <p>will place memory usage graph</p>
+        </div>
+        <div>
+            <p>will place processor graph</p>
+        </div>
+        <div>
+            <p>will place Traffic graph</p>
+        </div>
+    </div>
+</div>
+<div class="device-detail-nav-1">
+    <div class="device-nav-bar-1">
+        <ul class="nav-menu-2">
+            <li class="nav-item-2">
+                <a href="#"><img src="/static/images/overview-1.png">Overview</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="#">
+                    <img src="/static/images/graph.png">Graphs<img src="/static/images/dropdown-icon-1.svg">
+                    <div class="dropdown-content">
+                        <a href="#">System</a>
+                        <a href="#">Processor</a>
+                        <a href="#">Memory</a>
+                        <a href="#">Storage</a>
+                    </div>
+                </a>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="#">
+                    <img src="/static/images/health.png">Health<img src="/static/images/dropdown-icon-1.svg">
+                    <div class="dropdown-content">
+                        <a href="#">Processor</a>
+                        <a href="#">Memory</a>
+                        <a href="#">Storage</a>
+                        <a href="#">Status</a>
+                        <a href="#">Age</a>
+                    </div>
+                </a>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="#">
+                    <img src="/static/images/ethernet-port.png">Ports<img src="/static/images/dropdown-icon-1.svg">
+                    <div class="dropdown-content">
+                        <a href="#">Details</a>
+                        <hr>
+                        <a href="#">IP Address</a>
+                        <a href="#">ARP Table</a>
+                        <a href="#">Neighbours</a>
+                    </div>
+                </a>
+            </li>
+            <li>
+                <a href="#"><img src="/static/images/notification.png">Alerts</a>
+            </li>
+        </ul>
+    </div>
+    <div class="nav-right-2">
+        <ul class="nav-menu-3">
+            <li class="nav-item-2 dropdown">
+                <img src="/static/images/settings.png">
+                <img src="/static/images/dropdown-icon-1.svg">
+                <div class="dropdown-content-right">
+                    <a href="#">Properties</a>
+                    <hr>
+                    <a href="#">Ignore</a>
+                    <a href="#">Delete Device</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+    
+</div>
+<div class="device-details-1">
+    <div class="device-detail-info-1">
+        <table class="device-detail-info-table-1">
+            <tr>
+                <th width="35%"></th>
+                <th></th>
+            </tr>
+            {% if device.sys_description|lower!='none'%}
+                <tr>
+                    <td colspan="2">{{device.sys_description}}</td>
+                </tr>
+            {% endif %}
+            {% if device.description|lower!='none'%}
+                <tr>
+                    <td>Description</td>
+                    <td>{{device.description}}</td>
+                </tr>
+            {% endif %}
+             {% if device.model|lower!='none'%}
+                <tr>
+                    <td>Model/Hardware</td>
+                    <td>{{device.model}}</td>
+                </tr>
+            {% endif %}
+             {% if device.vendor|lower!='none'%}
+                <tr>
+                    <td>Vendor</td>
+                    <td>{{device.vendor}}</td>
+                </tr>
+            {% endif %}
+             {% if device.os_version|lower!='none'%}
+                <tr>
+                    <td>Operating System</td>
+                    <td>{{device.os_version}}</td>
+                </tr>
+            {% endif %}
+             {% if device.hostname|lower!='none'%}
+                <tr>
+                    <td>System Name</td>
+                    <td>{{device.hostname}}</td>
+                </tr>
+            {% endif %}
+             {% if device.ip_address|lower!='none'%}
+                <tr>
+                    <td>Cached IP/IP Address</td>
+                    <td>{{device.ip_address}}</td>
+                </tr>
+            {% endif %}
+             {% if device.location|lower!='none'%}
+                <tr>
+                    <td>Location</td>
+                    <td>{{device.location}}</td>
+                </tr>
+            {% endif %}
+             {% if device.serial_number|lower!='none'%}
+                <tr>
+                    <td>Serial</td>
+                    <td>{{device.serial_number}}</td>
+                </tr>
+            {% endif %}
+             {% if device.uptime|lower!='none'%}
+                <tr>
+                    <td>Uptime</td>
+                    <td>{{device.formatted_uptime}}</td>
+                </tr>
+            {% endif %}
+            {% if device.last_reboot_time|lower != 'none' %}
+                <tr>
+                    <td>Last Reboot</td>
+                    <td>{{device.last_reboot_time}}</td>
+                </tr>
+            {% endif %}
+        </table>
+    </div>
+    <div class="device-detail-graph-1">
+        <p> Test </p>
+    </div>
+
+</div>
+<div>
+    <div class="device-interface-summary-1">
+        <table class="device-interface-summary-table-1">
+            <tr>
+                <th colspan="4">
+                    <a href="#"><img src="/static/images/ethernet-port.png"> Ports</a>
+                </th>
+            </tr>
+            <tr>
+                <td colspan="4">
+                    Here will be in out octets summation for all interfaces
+                </td>
+            </tr>
+            <tr style="text-align: center;">
+                <td>
+                    <img src="/static/images/ethernet-port.png"> {{interfaces|length}}
+                </td>
+                <td>
+                    <img src="/static/images/green tick.png"> 
+                    {{interfaces | map(attribute="oper_status") | map("lower") | select("equalto","up") | list| length}}
+                </td>
+                <td>
+                    <img src="/static/images/red- minus.png"> 
+                    {{interfaces | selectattr("oper_status", "==", "down") | selectattr("admin_status", "==", "up") | list | length}}
+                </td>
+                <td>
+                    <img src="/static/images/gray minus.png"> 
+                    {{interfaces | map(attribute="admin_status") | map("lower") | select("equalto","down") | list| length}}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4">
+                    {% for interface in interfaces %}
+                        <a href="#" style="color: {% if interface.oper_status == 'up'%}darkblue{% elif interface.admin_status == 'down'%}gray{% elif interface.oper_status == 'down'%}red{% else %}rgb(71, 68, 68){% endif %}">{{interface.name}}, </a>
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

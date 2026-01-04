@@ -1,0 +1,502 @@
+/* base.html css */
+body {
+    margin: 0;
+    padding-left: 2%;
+    padding-right: 2%;
+    font-family: San 3 Arial;
+}
+
+.navbar {
+    background: white;
+    margin-bottom: 10px;
+    /* color: black; */
+    color:rgb(71, 68, 68);
+    padding: 12px;
+    display: flex;
+    justify-content: flex-start;
+    box-shadow: 0 4px 12px rgb(248, 248, 234);
+}
+.nav-left {
+    display: flex;
+    align-items: center;
+    margin: auto;
+    margin-left: 35px;
+    flex-grow: 0.5;
+}
+
+.nav-left a {
+    color:rgb(71, 68, 68);
+    text-decoration: none;
+    margin-right: 40px;
+}
+
+.nav-menu-div {
+    display: flex;
+    flex-grow: 3;
+    align-items: center;
+}
+
+.nav-right {
+    display: flex;
+    align-items: right;
+    margin-left: auto;
+}
+
+.nav-menu {
+    list-style: none;
+    margin: 0;
+    margin-left: 20px;
+    padding: 0;
+    display: flex;
+}
+
+.nav-menu img{
+    width: 15px;
+    height: 80%;
+}
+
+.nav-item {
+    position: relative;
+    margin-left: 20px;
+    margin-right: 30px;
+}
+
+.nav-item a {
+    color:rgb(71, 68, 68);
+    text-decoration: none;
+    padding: 8px;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background: white;
+    min-width: 200px;
+    z-index: 1;
+    opacity: 0;
+    transition: all 0.2 ease;
+    border: 1px solid #ccc;
+}
+.dropdown-content-right {
+    display: none;
+    position: absolute;
+    background: white;
+    min-width: 200px;
+    right:0;
+    z-index: 1;
+    opacity: 0;
+    transition: all 0.2 ease;
+    border: 1px solid #ccc;
+}
+
+.dropdown-content a,
+.dropdown-content-right a {
+    display: block;
+    padding: 8px;
+    color:rgb(71, 68, 68);
+    text-decoration: none;
+}
+
+.nav-item:hover .dropdown-content,
+.nav-item:hover .dropdown-content-right,
+.nav-item-2:hover .dropdown-content-right {
+    display: block;
+    opacity: 1;
+}
+
+.container {
+    /* background-color: hwb(255 85% 8% / 0.38); */
+    background-color:rgb(241, 241, 232);
+    margin: 0 3%;
+    padding-top: 2px;
+    padding-left: 0;
+    padding-right: 0;
+    min-width: 94%;
+}
+
+#flash-messages-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1050;
+    pointer-events: none;
+    max-width: 30%;
+}
+
+.flash-alert {
+    background:whitesmoke;
+    padding: 12px 18px;
+    padding-right: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    font-size: 15px;
+    backdrop-filter: blur(10px);
+    border-left: 5px solid;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.4s ease;
+    pointer-events: all;
+    animation: slideInRight 0.3s forwards, fadeOut 0.4s 10s forwards;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeOut {
+    to{
+        opacity: 0;
+        transform: translateZ(100%);
+    }    
+}
+
+.flash-alert.error {
+    background-color: #f8d7da;
+    border-color: #f33246;
+    color: #ce2a3a;
+}
+
+.flash-alert.warning {
+    background-color: #f8d7da;
+    border-color: #eecd12;
+    color:rgb(243, 163, 43);
+}
+
+.flash-alert.success {
+    background-color: #f8d7da;
+    border-color: #1afd05;
+    color: green;
+}
+
+.flash-alert.info {
+    background-color: #f8d7da;
+    border-color: #06ebfc;
+    color:rgb(245, 175, 43);
+}
+
+.flash-icon {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.flash-close{
+    font-size: 20px;
+    padding: 0 8px;
+    border-radius: 50%;
+    font-weight:bold;
+    cursor: pointer;
+    margin-left: 15px;
+    opacity: 0.7;
+    color:orange;
+}
+.flash-close:hover{
+    opacity: 1;
+    background-color: rgba(129, 101, 101, 0.2);
+    color:chocolate;
+}
+/* end base.html css */
+
+/* dashbaord.html css */
+.net-dashboard {
+    background: white;
+    margin-top: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    box-shadow: 0 4px 12px rgba(207, 219, 224, 0.1);
+    border-left: 5px solid rgb(207, 219, 222, 0.5);
+    border-right: 5px solid rgb(207, 219, 222, 0.5);
+    text-align: center;
+}
+
+.gap-view {
+    background: white;
+    height: 50px;
+    width: 100%;
+    box-shadow: 0 5px 12px rgba(207, 219, 224, 0.1);
+    border-left: 5px solid rgb(207, 219, 222, 0.5);
+    border-right: 5px solid rgb(207, 219, 222, 0.5);
+}
+
+.summary-cards {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    gap: 30px;
+    flex-wrap: wrap;
+    background: white;
+    margin-top: 5px;
+    margin-bottom: 20px;
+    padding: 20px;
+}
+
+.device-summary, .alert-summary{
+    flex:1;
+    width: 48%;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.device-summary{
+    padding:5px;
+    align-items: flex-start;
+}
+
+.alert-summary{
+    padding: 5px;
+    align-items: flex-end;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.summary-table th{
+    background-color:rgb(241, 241, 232);
+}
+
+.summary-table a{
+    text-decoration: none;
+}
+
+/* .summary-table a:hover{
+    text-decoration: underline;
+} */
+
+.small-vendor-icon{
+    width: 60px;
+}
+
+.small-vendor-icon img{
+    width: 40px;
+    height: 28px;
+}
+/* end dashboard.html css */
+
+/* device_list css */
+.device-table {
+    width: 100%;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-collapse: collapse;
+}
+
+.device-table th{
+    background-color:rgb(241, 241, 232);
+    color:rgb(71, 68, 68);
+    font-weight: bold;
+}
+
+.device-table a{
+    color: rgb(0, 0, 255);
+    font-weight: bold;
+}
+
+.device-table p{
+    margin: 0 0;
+    font-size: 14px;
+}
+
+.device-details {
+    width: 100%;
+    background: white;
+    margin-top: 5px;
+    margin-bottom: 20px;
+    padding: 20px;
+}
+
+/* end device list css */
+
+/* device detail css */
+.device-detail-brief{
+    display: flex;
+    width: 100%;
+    height: 90px;
+    background: white;
+    text-align: center;
+    justify-content: start;
+    margin-top: 5px;
+    margin-bottom: 8px;
+    gap: 12px;
+    padding: 8px;
+    box-shadow: 0 5px 12px rgba(207, 219, 224, 0.3);
+    border-left: 5px solid rgb(207, 219, 222, 0.5);
+    border-right: 5px solid rgb(207, 219, 222, 0.5);
+}
+
+.medium-vendor-icon{
+    align-self: center;
+}
+.medium-vendor-icon img{
+    width: 60px;
+    padding: 5px;
+}
+
+.device-ip-brief-1 a{
+    font-size: 25px;
+    text-align: left;
+} 
+
+.device-ip-brief-1{
+    margin: 5px 8px;
+    width: 45%;;
+    text-align: left;
+}
+
+.device-graph-brief-1{
+    display: flex;
+    width: 46.5%;
+    justify-content: end;
+}
+
+.device-detail-nav-1{
+    display: flex;
+    align-items: center;
+    flex: 1;
+    margin: 12px 0;
+    padding: 1px 0 1px 5px; 
+    height: 35px;
+    background: white;
+    color:rgb(71, 68, 68);
+    box-shadow: 0 5px 12px rgba(207, 219, 224, 0.3);
+    border-left: 5px solid rgb(207, 219, 222, 0.5);
+    border-right: 5px solid rgb(207, 219, 222, 0.5);
+}
+
+.device-nav-bar-1{
+    display: flex;
+    flex:1;
+}
+
+.nav-menu-2{
+    list-style: none;
+    margin: 0;
+    margin-left: 20px;
+    padding: 0;
+    display: flex;
+    text-align: left;
+}
+
+.device-detail-nav-1 img{
+    width: 18px;
+    height: 85%;
+}
+
+.nav-menu-3{
+    list-style: none;
+    margin: 0;
+    margin-left: 20px;
+    padding: 0;
+    display: flex;
+    align-items: right;
+}
+
+.nav-right-2{
+    display: flex;
+    justify-content: flex-end;
+}
+
+.device-details-1{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 30px;
+    background: white;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
+.device-detail-info-1,
+.device-detail-graph-1 {
+    /* flex:1 1 0; */
+    flex: 1;
+    width: 48%;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.device-detail-info-table-1{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    text-align: left;
+}
+
+.device-interface-summary-1{
+    background-color: white;
+    margin: 10px 0 10px;
+    padding: 10px;
+}
+
+.device-interface-summary-table-1{
+    width: 100%;
+}
+
+.device-interface-summary-table-1 img{
+    width: 18px;
+    height: 85%;
+}
+/* end device detail css */
+
+table{
+    border-collapse: separate;
+    border-spacing: 0 15px;
+}
+
+table td{
+    padding: 5px;
+}
+
+table tr:hover {
+    background-color:rgb(245, 245, 239);
+}
+
+a {
+    text-decoration: none;
+    color:rgb(71, 68, 68);
+}
+
+a:hover {
+    background-color: rgb(245, 245, 234);
+}
+.device-table a:hover, 
+.summary-table a:hover,
+.device-ip-brief-1 a:hover,
+.device-interface-summary-1 a:hover{
+    text-decoration: underline;
+    color: darkblue;
+    font-weight: bold;
+}
+/* .card {
+    background: #f2f2f2;
+    padding: 15px;
+    border-radius: 8px;
+    width: 180px;
+    text-align: center;
+    box-shadow: 0 0 3px rgba(0,0,0,0.2);
+} */
+
+/* .card h2 {
+    margin: 0 0 10px 0;
+} */
