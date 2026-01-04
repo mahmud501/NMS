@@ -1,5 +1,7 @@
 from modules.db import get_db
 from modules.snmp_test import snmp_test
+from modules.utils import encrypt_password
+
 
  # -------------------------------
     # SNMP Test before adding to DB
@@ -57,6 +59,11 @@ def add_devices(ip, snmp_version, community, v3_user, auth_protocol,
         #_auth_pw = hashlib.sha256(auth_password.encode()).hexdigest() if auth_password else None
         #_priv_pw = hashlib.sha256(priv_password.encode()).hexdigest() if priv_password else None
 
+        if auth_password is not None:
+            auth_password_hash = encrypt_password(auth_password)
+        if priv_password is not None:
+            priv_password_hash = encrypt_password(priv_password)
+
         cursor.execute("""
         INSERT INTO snmp_profiles (
             device_id, snmp_version, community,
@@ -70,9 +77,9 @@ def add_devices(ip, snmp_version, community, v3_user, auth_protocol,
         community,
         v3_user,
         auth_protocol_db,
-        auth_password,
+        auth_password_hash,
         priv_protocol_db,
-        priv_password
+        priv_password_hash
     ))
         db.commit()
         db.close()

@@ -1,3 +1,6 @@
+from cryptography.fernet import Fernet
+import os
+from dotenv import load_dotenv
 
 def format_time(timeticks):
     """ Convert timeticks in Human readable format """
@@ -27,4 +30,24 @@ def format_time(timeticks):
     time = " ".join(time_parts)
  
     return time    
-    
+
+load_dotenv()   
+key = os.getenv('SNMP_ENCRYPT_KEY').encode()
+cipher = Fernet(key)
+
+def encrypt_password(plain_password):
+    if not plain_password:
+        return None
+    plain_bytes = plain_password.encode('utf-8')
+    encrypted_bytes = cipher.encrypt(plain_bytes)
+    return encrypted_bytes.decode('utf-8')
+
+def decrypt_password(encrypted_password):
+    if not encrypted_password:
+        return None
+    try:
+        encrypted_bytes = encrypted_password.encode('utf-8')
+        plain_bytes = cipher.decrypt(encrypted_bytes)
+        return plain_bytes.decode('utf-8')
+    except:
+        return None
