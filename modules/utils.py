@@ -2,6 +2,8 @@ from cryptography.fernet import Fernet
 import os
 from dotenv import load_dotenv
 
+load_dotenv()
+
 def format_time(timeticks):
     """ Convert timeticks in Human readable format """
 
@@ -30,8 +32,7 @@ def format_time(timeticks):
     time = " ".join(time_parts)
  
     return time    
-
-load_dotenv()   
+ 
 key = os.getenv('SNMP_ENCRYPT_KEY').encode()
 cipher = Fernet(key)
 

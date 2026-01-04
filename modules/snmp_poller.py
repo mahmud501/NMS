@@ -56,8 +56,8 @@ def build_auth(profile):
 
     return UsmUserData(
         userName=profile.get("v3_user", ""),
-        authKey=profile.get("auth_password_hash", None),
-        privKey=profile.get("priv_password_hash", None),
+        authKey=profile.get("auth_password_plain", None),
+        privKey=profile.get("priv_password_plain", None),
         authProtocol=auth_protocol,
         privProtocol=priv_protocol
     )

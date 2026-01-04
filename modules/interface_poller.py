@@ -1,6 +1,7 @@
 import time
 from modules.db import get_db
 from modules.snmp_poller import snmp_walk
+from modules.utils import decrypt_password
 
 def poll_interfaces():
     """
@@ -26,6 +27,8 @@ def poll_interfaces():
     for device in devices:
         device_id = device['device_id']
         ip = device['ip_address']
+        device['auth_password_plain'] = decrypt_password(device['auth_password_hash'])
+        device['priv_password_plain'] = decrypt_password(device['priv_password_hash'])
 
         # Build proper SNMP profile dict
 

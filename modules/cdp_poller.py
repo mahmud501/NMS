@@ -1,6 +1,7 @@
 import time
 from modules.db import get_db
 from modules.snmp_poller import snmp_walk
+from modules.utils import decrypt_password
 
 def poll_cdp():
     """
@@ -22,6 +23,8 @@ def poll_cdp():
     for device in devices:
         device_id = device['device_id']
         ip = device['ip_address']
+        device['auth_password_plain'] = decrypt_password(device['auth_password_hash'])
+        device['priv_password_plain'] = decrypt_password(device['priv_password_hash'])
 
         # Poll ifTable for interface names
         if_table_oid = "1.3.6.1.2.1.2.2.1.2" #"1.3.6.1.2.1.2.2" - original oid

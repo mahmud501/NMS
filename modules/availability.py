@@ -3,6 +3,7 @@ import subprocess
 from modules.db import get_db
 from modules.snmp_poller import snmp_get
 from datetime import datetime, timedelta
+from modules.utils import decrypt_password
 
 def ping_device(ip):
     """
@@ -75,6 +76,8 @@ def poll_device_availability():
     for device in devices:
         device_id = device['device_id']
         ip = device['ip_address']
+        device['auth_password_plain'] = decrypt_password(device['auth_password_hash'])
+        device['priv_password_plain'] = decrypt_password(device['priv_password_hash'])
         
         status, uptime, latency = check_device_availability(ip, device)
         last_reboot = datetime.now()-timedelta(seconds=(uptime/100))

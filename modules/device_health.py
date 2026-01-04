@@ -2,6 +2,7 @@ import time
 from modules.db import get_db
 from modules.snmp_poller import snmp_get, snmp_walk
 from modules.oids import get_oids_for_vendor
+from modules.utils import decrypt_password
 
 def poll_device_health():
     """
@@ -24,6 +25,8 @@ def poll_device_health():
         device_id =  device['device_id']
         ip = device['ip_address']
         vendor = device['vendor']
+        device['auth_password_plain'] = decrypt_password(device['auth_password_hash'])
+        device['priv_password_plain'] = decrypt_password(device['priv_password_hash'])
 
         oids= get_oids_for_vendor(vendor)
         
