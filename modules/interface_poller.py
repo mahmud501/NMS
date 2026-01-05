@@ -74,6 +74,7 @@ def poll_interfaces():
             description = data.get('18', '')  # ifDescr
             admin_status = 'up' if data.get('7') == 1 else 'down'  # ifAdminStatus
             oper_status = 'up' if data.get('8') == 1 else 'down'  # ifOperStatus
+            mtu = data.get('4')
             speed = data.get('5')  # ifSpeed
             mac_address = data.get('6')  # Keep as is for now
             if mac_address and len(mac_address) == 14:
@@ -81,7 +82,7 @@ def poll_interfaces():
             ipv4_address = interface_ips.get(if_index, "")
 
             # Check if interface exists
-            cursor.execute("SELECT interface_id, name, description, admin_status, oper_status, speed, mac_address, ipv4_address FROM interfaces WHERE device_id = %s AND if_index = %s", (device_id, if_index))
+            cursor.execute("SELECT interface_id, name, description, admin_status, oper_status, speed, mtu, mac_address, ipv4_address FROM interfaces WHERE device_id = %s AND if_index = %s", (device_id, if_index))
             existing = cursor.fetchone()
 
             if existing:
@@ -91,19 +92,20 @@ def poll_interfaces():
                     existing['admin_status'] != admin_status or
                     existing['oper_status'] != oper_status or
                     existing['speed'] != speed or
+                    existing['mtu'] != mtu or
                     existing['mac_address'] != mac_address or
                     existing['ipv4_address'] != ipv4_address):
                     cursor.execute("""
                         UPDATE interfaces
-                        SET name = %s, description = %s, admin_status = %s, oper_status = %s, speed = %s, mac_address = %s, ipv4_address = %s, updated_at = NOW()
+                        SET name = %s, description = %s, admin_status = %s, oper_status = %s, speed = %s, mtu = %s, mac_address = %s, ipv4_address = %s, updated_at = NOW()
                         WHERE interface_id = %s
-                    """, (name, description, admin_status, oper_status, speed, mac_address, ipv4_address, existing['interface_id']))
+                    """, (name, description, admin_status, oper_status, speed, mtu, mac_address, ipv4_address, existing['interface_id']))
             else:
                 # Insert new interface
                 cursor.execute("""
-                    INSERT INTO interfaces (device_id, if_index, name, description, mac_address, ipv4_address, speed, admin_status, oper_status, created_at)
+                    INSERT INTO interfaces (device_id, if_index, name, description, mac_address, ipv4_address, speed, mtu, admin_status, oper_status, created_at)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-                """, (device_id, if_index, name, description, mac_address, ipv4_address, speed, admin_status, oper_status))
+                """, (device_id, if_index, name, description, mac_address, ipv4_address, speed, mtu, admin_status, oper_status))
 
             # Get interface_id
             if existing:

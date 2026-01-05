@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}NMS - {{page_title}}{% endblock %}
+
+{% block content %}
+<div class="net-dashboard">
+    <h3>{{page_title}}</h3>
+</div>
+<div class="gap-view">
+</div>
+<div class = "interface-details">
+    <table class="interface-list-table">
+        <thead>
+            <tr>
+                <th>Device IP/Hostname</th>
+                <th>Interface Name/Description</th>
+                <th>Speed/MTU</th>
+                <th>MAC Address/Media</th>
+                <th>IPv4 Address</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for interface in interfaces %}
+                <tr>
+                    <td>
+                        <a href="/devices/device/{{ interface.device_id }}">{{ interface.ip_address }}</a>
+                    </td>
+                    <td>
+                        <a href="">{{ interface.name}}</a>
+                        <p>{{ interface.description }}</p>
+                    </td>
+                    <td>
+                        <p>{{ interface.speed }}</p>
+                        <p>{{ interface.mtu }}</p>
+                    </td>
+                    <td>
+                        <p>{{ interface.mac_address}}</p>
+                    </td>
+                    <td>
+                        <p>{{ interface.ipv4_address}}</p>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

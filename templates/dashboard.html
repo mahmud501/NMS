@@ -20,18 +20,18 @@
                 <th>Disabled</th>
             </tr>
             <tr >
-                <td align="left"> <a href="/devices/all"><strong>Devices</strong></a></td>
+                <td align="left"> <a class="list-title" href="/devices/all"><strong>Devices</strong></a></td>
                 <td>
-                    <a href="/devices/all" style="color: blue;">{{ devices|length }}
+                    <a class="list-all" href="/devices/all">{{ devices|length }}
                         </a>
                     </td>
                 <td>
-                    <a href="/devices/up" style="color: green;">
+                    <a class="list-up" href="/devices/up">
                     {{ devices | map(attribute="status") | map("lower") | select("equalto","up") | list | length }} up
                     </a>
                 </td>
                 <td style="color:red">
-                    <a href="/devices/down" style="color: red;">
+                    <a class="list-down" href="/devices/down">
                     {{  devices | map(attribute="status") | map("lower") | select("equalto","down") | list | length}} down
                     </a>
                 </td>
@@ -39,16 +39,28 @@
                 <td></td>
             </tr>
             <tr>
-                <td align="left">Ports</td>
-                <td style="color:blue"> {{interfaces|length}} </td>
+                <td align="left">
+                    <a class="list-title" href="/ports/all"><strong>Ports</strong></a>
+                </td>
+                <td style="color:blue"> 
+                    <a class="list-all" href="/ports/all">{{interfaces|length}}</a>
+                </td>
                 <td style="color:green">
+                    <a class="list-up" href="/ports/up">
                     {{interfaces|map(attribute="oper_status")|map("lower")|select("equalto","up")|list|length}} up
+                    </a>
                 </td>
                 <td style="color:red">
+                    <a class="list-down" href="/ports/down">
                     {{interfaces|map(attribute="oper_status")|map("lower")|select("equalto","down")|list|length}} down
+                    </a>
                 </td>
                 <td style="color:lightslategray"></td>
-                <td>{{interfaces|map(attribute="admin_status")|map("lower")|select("equalto","down")|list|length}} shutdown   
+
+                <td style="color: gray;">
+                    <a class="list-disabled" href="/ports/disabled">
+                    {{interfaces|map(attribute="admin_status")|map("lower")|select("equalto","down")|list|length}} shutdown   
+                    </a>
                 </td> 
             </tr>
         </table>

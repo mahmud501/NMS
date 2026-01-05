@@ -98,13 +98,14 @@ def poll_interfaces():
             description = data.get('18', '')  # ifDescr
             admin_status = 'up' if data.get('7') == 1 else 'down'  # ifAdminStatus
             oper_status = 'up' if data.get('8') == 1 else 'down'  # ifOperStatus
+            mtu = data.get('4')
             speed = data.get('5')  # ifSpeed
             mac_address = data.get('6')  # Keep as is for now
             if mac_address and len(mac_address) == 14:
                 mac_address = ':'.join(mac_address[i:i+2] for i in range(2, 14, 2))
             ipv4_address = interface_ips.get(if_index, "")
             print(f"Processing Device {ip} Interface {if_index}: Name={name}, AdminStatus={admin_status}, OperStatus={oper_status}, Speed={speed}, MAC={mac_address}, IP={ipv4_address}")
-            print(f"int description: {description}")
+            print(f"MTU: {mtu}")
         #     # Check if interface exists
         #     # cursor.execute("SELECT interface_id, name, description, admin_status, oper_status, speed, mac_address FROM interfaces WHERE device_id = %s AND if_index = %s", (device_id, if_index))
         #     # existing = cursor.fetchone()

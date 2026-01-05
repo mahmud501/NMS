@@ -163,6 +163,12 @@
                     <td>{{device.last_reboot_time}}</td>
                 </tr>
             {% endif %}
+            {% if device.last_polled_time|lower != 'none' %}
+                <tr>
+                    <td>Last Polled</td>
+                    <td>{{device.last_polled_time}}</td>
+                </tr>
+            {% endif %}
         </table>
     </div>
     <div class="device-detail-graph-1">

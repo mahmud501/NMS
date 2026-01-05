@@ -73,8 +73,6 @@ def device_details(device_id):
 
     return render_template("device_detail.html", page_title=device["ip_address"], device=device, interfaces=interfaces)
 
-
-
 @app.route("/devices/add", methods=["GET", "POST"])
 def add_device():
     if request.method == "GET":
@@ -122,6 +120,39 @@ def add_device():
         )
 
     # return redirect(f"/devices/{device_id}")
+
+@app.route("/ports/<interface_filter>")
+def interfaces_list(interface_filter="all"):
+    db =get_db()
+    cursor = db.cursor(dictionary=True)
+    query = """ 
+        SELECT i.*, d.ip_address FROM interfaces i
+        JOIN devices d ON  i.device_id = d.device_id
+    """
+
+    page_title = "All Interfaces"
+    if interface_filter == "up":
+        query += " WHERE i.oper_status = 'up'"
+        page_title = "Up Interfaces"
+    elif interface_filter == 'down':
+        query += " WHERE i.oper_status = 'down'"
+        page_title = "Down Interfaces"
+    elif interface_filter == "disabled":
+        query += " WHERE i.admin_status = 'down'"
+        page_title = "Disabled Interfaces"
+    else:
+        page_title = "Interfaces"
+
+    cursor.execute(query)
+    interfaces = cursor.fetchall()
+    cursor.close()
+    db.close()
+    
+    if not interfaces:
+        return redirect(url_for("dashboard"))
+    
+    return render_template ("interfaces_list.html", page_title=page_title, interfaces=interfaces)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
