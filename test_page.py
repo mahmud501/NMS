@@ -12,5 +12,25 @@ from modules.oids import get_device_model
 # print(format_time(3661))      # → 1h 1m 1s
 # print(format_time(90061))     # → 1d 1h 1m 1s
 # print(format_time(0))         # → 0s
-model = get_device_model("enterprises.9.1.222")
-print(model)
+# model = get_device_model("enterprises.9.1.222")
+# print(model)
+import os
+# from dotenv import load_dotenv
+from cryptography.fernet import Fernet
+
+# # load_dotenv() # Loads the .env file into the environment
+# key = os.getenv('SNMP_ENCRYPT_KEY')
+# print(key)
+
+key = os.getenv("SNMP_ENCRYPT_KEY").encode()
+cipher = Fernet(key)
+
+# When adding a device
+plain_password = "mysecretpassword"
+plain_bytes= plain_password.encode('utf-8')
+print(plain_bytes)
+encrypted_password = cipher.encrypt(plain_bytes).decode()
+print(encrypted_password)
+
+plain_test = cipher.decrypt(encrypted_password.encode()).decode()
+print(plain_test)

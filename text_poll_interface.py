@@ -1,6 +1,7 @@
 import time
 from modules.db import get_db
 from modules.snmp_poller import snmp_walk, snmp_get
+
 # from modules.interface_poller import poll_interfaces
 
 # poll_interfaces()
@@ -26,7 +27,7 @@ def poll_interfaces():
 
     device_list =[
         {
-            "ip_address": "10.10.25.1",
+            "ip_address": "10.10.1.10",
             "snmp_version": "v3",
             "community": "Mynms",
             "v3_user": "nmsuser",
@@ -41,6 +42,8 @@ def poll_interfaces():
     for device in devices:
         #device_id = device['device_id']
         ip = device["ip_address"]
+        device["auth_password_plain"]=device["auth_password_hash"]
+        device["[priv_password_plain"]=device["priv_password_hash"]
 
         # Build proper SNMP profile dict
 
@@ -48,6 +51,8 @@ def poll_interfaces():
         if_table_oid = "1.3.6.1.2.1.2.2"
         ip_table_oid = "1.3.6.1.2.1.4.20.1.1"
         ip_int_table_oid = "1.3.6.1.2.1.4.20.1.2"
+        ifX_table_oid = "1.3.6.1.2.1.31.1.1.1"  # ifXTable base - Alias
+        ifX_data = snmp_walk(ip, ifX_table_oid, device)
         if_data = snmp_walk(ip, if_table_oid, device)
         print (f"Interface WALK result for {ip}: {if_data}")
         ip_data = snmp_walk(ip, ip_int_table_oid, device)
@@ -79,12 +84,18 @@ def poll_interfaces():
                 interfaces[if_index] = {}
             interfaces[if_index][sub_oid] = value
             #print(f"Collected OID {oid} with value {value} for if_index {if_index}")
+        for oid, value in ifX_data.items():
+            parts = oid.split('.')
+            if len(parts) >= 11 and parts[-2] == '18':  # ifAlias
+                if_index = int(parts[-1])
+                if if_index in interfaces:
+                    interfaces[if_index]['18'] = value
 
         for if_index, data in interfaces.items():
             #print(f"Data for if_index {if_index}: {data}")
             # Extract interface info
             name = data.get('2', '')  # ifDescr
-            description = data.get('2', '')  # ifDescr
+            description = data.get('18', '')  # ifDescr
             admin_status = 'up' if data.get('7') == 1 else 'down'  # ifAdminStatus
             oper_status = 'up' if data.get('8') == 1 else 'down'  # ifOperStatus
             speed = data.get('5')  # ifSpeed
@@ -93,6 +104,7 @@ def poll_interfaces():
                 mac_address = ':'.join(mac_address[i:i+2] for i in range(2, 14, 2))
             ipv4_address = interface_ips.get(if_index, "")
             print(f"Processing Device {ip} Interface {if_index}: Name={name}, AdminStatus={admin_status}, OperStatus={oper_status}, Speed={speed}, MAC={mac_address}, IP={ipv4_address}")
+            print(f"int description: {description}")
         #     # Check if interface exists
         #     # cursor.execute("SELECT interface_id, name, description, admin_status, oper_status, speed, mac_address FROM interfaces WHERE device_id = %s AND if_index = %s", (device_id, if_index))
         #     # existing = cursor.fetchone()

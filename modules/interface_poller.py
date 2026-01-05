@@ -37,6 +37,8 @@ def poll_interfaces():
         if_data = snmp_walk(ip, if_table_oid, device)
         ip_int_table_oid = "1.3.6.1.2.1.4.20.1.2"
         ip_data = snmp_walk(ip, ip_int_table_oid, device)
+        ifX_table_oid = "1.3.6.1.2.1.31.1.1.1"
+        ifX_data = snmp_walk(ip, ifX_table_oid, device)
 
         interface_ips = {}
         for ip_oid, ip_index in ip_data.items():
@@ -52,18 +54,24 @@ def poll_interfaces():
         interfaces = {}
         for oid, value in if_data.items():
             parts = oid.split('.')
-            if len(parts) < 11:  # base (7) + entry (1) + column (1) + index (1) = 10
-                continue
+            if len(parts) < 11:  
+                 continue
             if_index = int(parts[-1])
             sub_oid = f"{parts[-2]}"
             if if_index not in interfaces:
                 interfaces[if_index] = {}
             interfaces[if_index][sub_oid] = value
+        for oid, value in ifX_data.items():
+            parts = oid.split('.')
+            if len(parts) >= 11 and parts[-2] == '18':
+                if_index = int(parts[-1])
+                if if_index in interfaces:
+                    interfaces[if_index]['18'] = value
 
         for if_index, data in interfaces.items():
             # Extract interface info
             name = data.get('2', '')  # ifDescr
-            description = data.get('2', '')  # ifDescr
+            description = data.get('18', '')  # ifDescr
             admin_status = 'up' if data.get('7') == 1 else 'down'  # ifAdminStatus
             oper_status = 'up' if data.get('8') == 1 else 'down'  # ifOperStatus
             speed = data.get('5')  # ifSpeed

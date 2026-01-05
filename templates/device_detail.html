@@ -203,7 +203,13 @@
             <tr>
                 <td colspan="4">
                     {% for interface in interfaces %}
-                        <a href="#" style="color: {% if interface.oper_status == 'up'%}darkblue{% elif interface.admin_status == 'down'%}gray{% elif interface.oper_status == 'down'%}red{% else %}rgb(71, 68, 68){% endif %}">{{interface.name}}, </a>
+                        <a href="#" class="interface-link 
+                            {% if interface.oper_status == 'up' %}up
+                            {% elif interface.admin_status == 'down' %}admin-down
+                            {% elif interface.oper_status == 'down' %}oper-down
+                            {% else %}default{% endif %}">
+                            {{ interface.name }},
+                         </a>
                     {% endfor %}
                 </td>
             </tr>
