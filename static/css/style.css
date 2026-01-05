@@ -551,8 +551,18 @@ body {
 
 .interface-list-table{
     width: 100%;
+    border-collapse: collapse;
 }
 
+.interface-list-row-1.up-up{
+    background-color: white;
+}
+.interface-list-row-1.down-up{
+    background-color: rgb(248, 232, 232);
+}
+.interface-list-row-1.down-down{
+    background-color: rgb(226, 226, 226)
+}
 /* end interface list css */
 table{
     border-collapse: separate;

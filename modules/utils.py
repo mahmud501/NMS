@@ -52,3 +52,14 @@ def decrypt_password(encrypted_password):
         return plain_bytes.decode('utf-8')
     except:
         return None
+    
+def format_speed(speed_bps):
+    if speed_bps is None or speed_bps <= 0:
+        return "Unknown"
+    speed = float(speed_bps)
+    if speed >= 1000000000:
+        return f"{speed//1000000000:.0f} Gbps"
+    elif speed >= 1000000:
+        return f"{speed//1000000:.0f} Mbps"
+    else:
+        return f"{speed//1000:.0f} Kbps"

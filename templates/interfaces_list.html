@@ -21,7 +21,7 @@
         </thead>
         <tbody>
             {% for interface in interfaces %}
-                <tr>
+                <tr class = "interface-list-row-1 {{interface.oper_status}}-{{interface.admin_status}}">
                     <td>
                         <a href="/devices/device/{{ interface.device_id }}">{{ interface.ip_address }}</a>
                     </td>
@@ -30,7 +30,7 @@
                         <p>{{ interface.description }}</p>
                     </td>
                     <td>
-                        <p>{{ interface.speed }}</p>
+                        <p>{{ interface.speed | format_speed }} </p>
                         <p>{{ interface.mtu }}</p>
                     </td>
                     <td>

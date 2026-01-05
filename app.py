@@ -1,13 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from modules.db import get_db
 from modules.add_devices import add_devices
-from modules.utils import format_time
+from modules.utils import format_time, format_speed
 from datetime import datetime, timedelta
 import hashlib
 
 app = Flask(__name__)
 
 app.secret_key="NMS_Project"
+app.jinja_env.filters['format_speed'] = format_speed
 
 @app.route("/")
 @app.route("/dashboard")

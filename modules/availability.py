@@ -80,7 +80,10 @@ def poll_device_availability():
         device['priv_password_plain'] = decrypt_password(device['priv_password_hash'])
         
         status, uptime, latency = check_device_availability(ip, device)
-        last_reboot = datetime.now()-timedelta(seconds=(uptime/100))
+        if uptime is not None:
+            last_reboot = datetime.now()-timedelta(seconds=(uptime/100))
+        else:
+            last_reboot = None
 
         # Update devices table
         cursor.execute("""
