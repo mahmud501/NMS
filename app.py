@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from modules.db import get_db
 from modules.add_devices import add_devices
 from modules.utils import format_time, format_speed
@@ -154,6 +154,34 @@ def interfaces_list(interface_filter="all"):
     
     return render_template ("interfaces_list.html", page_title=page_title, interfaces=interfaces)
 
+@app.route("/api/device/<int:device_id>/throughput")
+def device_throughput(device_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT UNIX_TIMESTAMP(s.timestamp) * 1000 AS ts,
+            SUM(s.in_bps) AS in_bps,
+            SUM(s.out_bps) AS out_bps
+        FROM interface_stats s
+        JOIN interfaces i ON s.interface_id = i.interface_id
+        WHERE i.device_id= %s
+        AND s.timestamp >= NOW() - INTERVAL 1 DAY
+        GROUP BY ts
+        ORDER BY ts
+    """, (device_id,)
+    )
+    result = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    data = {
+        "labels": [r["ts"] for r in result],
+        "in": [r["in_bps"] for r in result],
+        "out": [-r["out_bps"] for r in result]
+    }
+    
+    return jsonify(data)
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -6,7 +6,7 @@
 
 <div class="gap-view"></div>
 
-<div class="device-detail-brief">
+<div class="device-detail-brief {{device.status|lower}}">
     <div class="medium-vendor-icon">
         <img src=" {% if device.vendor|lower=='cisco' %}/static/images/cisco.png
                     {% elif device.vendor|lower=='mikrotik' %}/static/images/mikrotik.png
@@ -172,7 +172,10 @@
         </table>
     </div>
     <div class="device-detail-graph-1">
-        <p> Test </p>
+        <p>Throughput</p>
+        <div class="device-detail-graph-1">
+            <canvas id="deviceThroughput"></canvas>
+        </div>
     </div>
 
 </div>
@@ -183,11 +186,6 @@
                 <th colspan="4">
                     <a href="#"><img src="/static/images/ethernet-port.png"> Ports</a>
                 </th>
-            </tr>
-            <tr>
-                <td colspan="4">
-                    Here will be in out octets summation for all interfaces
-                </td>
             </tr>
             <tr style="text-align: center;">
                 <td>
@@ -223,4 +221,60 @@
     </div>
 </div>
 
+<script>
+fetch("/api/device/{{ device.device_id }}/throughput")
+.then(res => res.json())
+.then(data => {
+
+  const ctx = document.getElementById("deviceThroughput").getContext("2d");
+
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: data.labels,
+      datasets: [
+        {
+          label: "In",
+          data: data.in,
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0
+        },
+        {
+          label: "Out",
+          data: data.out,
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index",
+        intersect: false
+      },
+      scales: {
+        x: {
+          type: "time",
+          time: {
+            unit: "hour",
+            stepSize: 3
+          }
+        },
+        y: {
+          ticks: {
+            callback: value => (value/1000).toFixed(1) + " kbps"
+          }
+        }
+      }
+    }
+  });
+
+});
+</script>
 {% endblock %}

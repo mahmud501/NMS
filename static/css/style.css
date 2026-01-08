@@ -291,41 +291,6 @@ body {
     width: 40px;
     height: 28px;
 }
-/* end dashboard.html css */
-
-/* device_list css */
-.device-table {
-    width: 100%;
-    background-color: #ffffff;
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    border-collapse: collapse;
-}
-
-.device-table th{
-    background-color:rgb(241, 241, 232);
-    color:rgb(71, 68, 68);
-    font-weight: bold;
-}
-
-.device-table a{
-    color: rgb(0, 0, 255);
-    font-weight: bold;
-}
-
-.device-table p{
-    margin: 0 0;
-    font-size: 14px;
-}
-
-.device-details {
-    width: 100%;
-    background: white;
-    margin-top: 5px;
-    margin-bottom: 20px;
-    padding: 20px;
-}
 .list-title{
     color: rgb(71, 68, 68);
 }
@@ -361,11 +326,76 @@ body {
     color: darkgray;
     text-decoration: underline;
 }
+/* end dashboard.html css */
 
+/* device_list css */
+.device-table {
+    width: 100%;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-collapse: collapse;
+}
+
+.device-table th{
+    background-color:rgb(241, 241, 232);
+    color:rgb(71, 68, 68);
+    font-weight: bold;
+}
+
+.device-table a{
+    color: rgb(0, 0, 255);
+    font-weight: bold;
+}
+.device-table a:hover{
+    background-color: unset;
+    text-decoration: underline;
+    color: darkblue;
+}
+
+.device-table p{
+    margin: 0 0;
+    font-size: 14px;
+}
+
+.device-details {
+    width: 100%;
+    background: white;
+    margin-top: 5px;
+    margin-bottom: 20px;
+    padding: 20px;
+}
+
+.device-list-row.up{
+    background-color: white;
+}
+.device-list-row.down{
+    background-color: rgb(248, 232, 232);
+}
+.device-list-row.up:hover{
+    background-color: rgb(245, 245, 239);
+}
+.device-list-row.down:hover{
+    background-color: rgb(245, 212, 212);
+}
+.device-list-ip.up{
+    color: blue;
+}
+.device-list-ip.down{
+    color: red;
+}
+.device-list-ip.up:hover{
+    color: darkblue;
+}
+.device-list-ip.down:hover{
+    color: darkred;
+}
 /* end device list css */
 
 /* device detail css */
-.device-detail-brief{
+.device-detail-brief.up,
+.device-detail-brief.down{
     display: flex;
     width: 100%;
     height: 90px;
@@ -379,6 +409,26 @@ body {
     box-shadow: 0 5px 12px rgba(207, 219, 224, 0.3);
     border-left: 5px solid rgb(207, 219, 222, 0.5);
     border-right: 5px solid rgb(207, 219, 222, 0.5);
+}
+
+.device-detail-brief.up{
+    background-color: white;
+}
+.device-detail-brief.up:hover{
+    background-color: rgb(245, 245, 239);
+}
+
+.device-detail-brief.down{
+    background-color: rgb(248, 232, 232);
+}
+.device-detail-brief.down:hover{
+    background-color: rgb(245, 212, 212);
+}
+.device-detail-brief a:hover{
+    color:darkblue;
+}
+.device-detail-brief.down a:hover{
+    color:darkred;
 }
 
 .medium-vendor-icon{
@@ -502,9 +552,18 @@ body {
     font-weight: bold;
 }
 
+.device-detail-graph-1{
+    width: 100%;
+}
+
+#deviceThroughput{
+    width: 100%;
+    max-height: 250px;
+}
+
 .interface-link {
     text-decoration: none;
-    font-weight: 500;
+    font-weight: bold;
 }
 
 .interface-link.default {
@@ -552,6 +611,18 @@ body {
 .interface-list-table{
     width: 100%;
     border-collapse: collapse;
+    font-weight: bold;
+}
+.interface-list-table p{
+    margin: 0 0;
+}
+
+.interface-list-table a{
+    color:rgb(8, 8, 243);
+}
+.interface-list-table a:hover{
+    color:rgb(2, 2, 88);
+    background-color: unset;
 }
 
 .interface-list-row-1.up-up{
@@ -561,9 +632,41 @@ body {
     background-color: rgb(248, 232, 232);
 }
 .interface-list-row-1.down-down{
-    background-color: rgb(226, 226, 226)
+    background-color:rgb(245, 243, 243);
+}
+.interface-list-row-1.up-up:hover{
+    background-color:rgb(245, 245, 239);
+}
+.interface-list-row-1.down-up:hover{
+    background-color: rgb(245, 212, 212);
+}
+.interface-list-row-1.down-down:hover{
+    background-color:rgb(245, 245, 239);
+}
+
+.interface-status.up-up{
+    color:rgb(3, 3, 173);
+}
+.interface-status.down-up{
+    color: rgb(216, 25, 25);
+}
+.interface-status.down-down{
+    color: rgb(138, 137, 137);
+}
+.interface-status.up-up:hover{
+    color:rgb(3, 3, 100);
+    text-decoration: underline;
+}
+.interface-status.down-up:hover{
+    color: rgb(126, 6, 6);
+    text-decoration: underline;
+}
+.interface-status.down-down:hover{
+    color: rgb(126, 125, 125);
+    text-decoration: underline;
 }
 /* end interface list css */
+
 table{
     border-collapse: separate;
     border-spacing: 0 15px;
@@ -585,8 +688,8 @@ a {
 a:hover {
     background-color: rgb(245, 245, 234);
 }
-.device-table a:hover, 
-.device-ip-brief-1 a:hover,
+
+.device-ip-brief-1.up a:hover,
 .device-interface-summary-1 a:hover{
     text-decoration: underline;
     color: darkblue;

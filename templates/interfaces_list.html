@@ -26,7 +26,9 @@
                         <a href="/devices/device/{{ interface.device_id }}">{{ interface.ip_address }}</a>
                     </td>
                     <td>
-                        <a href="">{{ interface.name}}</a>
+                        <a class="interface-status {{interface.oper_status}}-{{interface.admin_status}}"href="">
+                            {{ interface.name}}
+                        </a>
                         <p>{{ interface.description }}</p>
                     </td>
                     <td>
@@ -35,6 +37,18 @@
                     </td>
                     <td>
                         <p>{{ interface.mac_address}}</p>
+                        {% set ifname = interface.name | lower %}
+                        {% if 'eth' in ifname or 'gig' in ifname or 'fast' in ifname or 'ten' in ifname or 'ens' in ifname or 'enp' in ifname %}
+                            <p>Ethernet</p>
+                        {% elif 'lo' == ifname or 'loopback' in ifname %}
+                            <p>Loopback</p>>
+                        {% elif 'vlan' in ifname or 'bridge' in ifname or 'internal' in ifname or 'vir' in ifname %}
+                            <p>Virtual/Internal</p>
+                        {% elif 'null' in ifname %}
+                            <p>Null</p>
+                        {% else %}
+                            <p>Other</p>>
+                        {% endif %}
                     </td>
                     <td>
                         <p>{{ interface.ipv4_address}}</p>

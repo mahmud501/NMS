@@ -21,14 +21,14 @@
         <tbody>
             {% if devices %}
                 {% for d in devices %}
-                <tr>
+                <tr class="device-list-row {{d.status|lower}}">
                     <td class="small-vendor-icon">
                         <img src=" {% if d.vendor|lower=='cisco' %}/static/images/cisco.png
                         {% elif d.vendor|lower=='mikrotik' %}/static/images/mikrotik.png
                         {%elif d.vendor|lower=='linux'%}/static/images/linux.png
                         {%else%}/static/images/router.png{% endif %}" alt="vendor_icon"></td>
-                    <td style="color: {% if d.status|lower =='up' %}blue{%else%}red{%endif%}">
-                        <a href="/devices/device/{{ d.device_id }}">{{d.ip_address}}</a>
+                    <td>
+                        <a class = "device-list-ip {{d.status|lower}}" href="/devices/device/{{ d.device_id }}">{{d.ip_address}}</a>
                         <p style="color: rgb(71, 68, 68);">{{d.location}}</p>
                     </td>
                     <td>
