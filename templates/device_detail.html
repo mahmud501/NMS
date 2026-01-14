@@ -24,9 +24,6 @@
         <div>
             <p>will place processor graph</p>
         </div>
-        <div>
-            <p>will place Traffic graph</p>
-        </div>
     </div>
 </div>
 <div class="device-detail-nav-1">
@@ -62,7 +59,7 @@
                 <a href="#">
                     <img src="/static/images/ethernet-port.png">Ports<img src="/static/images/dropdown-icon-1.svg">
                     <div class="dropdown-content">
-                        <a href="#">Details</a>
+                        <a href="/devices/device/{{device.device_id}}/ports">Details</a>
                         <hr>
                         <a href="#">IP Address</a>
                         <a href="#">ARP Table</a>
@@ -264,12 +261,23 @@ fetch("/api/device/{{ device.device_id }}/throughput")
           time: {
             unit: "hour",
             stepSize: 3
+            
           }
         },
         y: {
           ticks: {
-            callback: value => (value/1000).toFixed(1) + " kbps"
-          }
+                callback: function(value) {
+                const abs = Math.abs(value);
+                
+                if (abs >= 1e9) {
+                    return (value / 1e9).toFixed(2) + ' Gbps';
+                }
+                if (abs >= 1e6) {
+                    return (value / 1e6).toFixed(1) + ' Mbps';
+                }
+                return (value / 1e3).toFixed(0) + ' kbps';
+                }
+            }
         }
       }
     }

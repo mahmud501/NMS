@@ -74,6 +74,21 @@ def device_details(device_id):
 
     return render_template("device_detail.html", page_title=device["ip_address"], device=device, interfaces=interfaces)
 
+@app.route("/devices/device/<int:device_id>/ports")
+def device_ports(device_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM interfaces WHERE device_id=%s",(device_id,))
+    interfaces=cursor.fetchall()
+    cursor.execute("SELECT * FROM devices WHERE device_id=%s",(device_id,))
+    device=cursor.fetchone()
+    cursor.close()
+    db.close()
+
+    page_title= f"{device['ip_address']}-ports"
+
+    return render_template("device_interfaces_detail.html",page_title=page_title,interfaces=interfaces,device=device)
+
 @app.route("/devices/add", methods=["GET", "POST"])
 def add_device():
     if request.method == "GET":

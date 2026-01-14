@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}NMS - {{page_title}}{% endblock %}
+
+{% block content %}
+
+<div class="gap-view"></div>
+
+<div class="device-detail-brief {{device.status|lower}}">
+    <div class="medium-vendor-icon">
+        <img src=" {% if device.vendor|lower=='cisco' %}/static/images/cisco.png
+                    {% elif device.vendor|lower=='mikrotik' %}/static/images/mikrotik.png
+                    {%elif device.vendor|lower=='linux'%}/static/images/linux.png
+                    {%else%}/static/images/router.png{% endif %}" alt="vendor_icon">
+    </div>
+    <div class="device-ip-brief-1">
+        <a href="/devices/device/{{device.device_id}}">{{device.ip_address}}</a>
+        <p>{% if device.location|lower!='none' %}{{device.location}}{% endif %}</p>
+    </div>
+    <div class="device-graph-brief-1">
+        <div>
+            <p>will place memory usage graph</p>
+        </div>
+        <div>
+            <p>will place processor graph</p>
+        </div>
+    </div>
+</div>
+<div class="device-detail-nav-1">
+    <div class="device-nav-bar-1">
+        <ul class="nav-menu-2">
+            <li class="nav-item-2">
+                <a href="#"><img src="/static/images/overview-1.png">Overview</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="#">
+                    <img src="/static/images/graph.png">Graphs<img src="/static/images/dropdown-icon-1.svg">
+                    <div class="dropdown-content">
+                        <a href="#">System</a>
+                        <a href="#">Processor</a>
+                        <a href="#">Memory</a>
+                        <a href="#">Storage</a>
+                    </div>
+                </a>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="#">
+                    <img src="/static/images/health.png">Health<img src="/static/images/dropdown-icon-1.svg">
+                    <div class="dropdown-content">
+                        <a href="#">Processor</a>
+                        <a href="#">Memory</a>
+                        <a href="#">Storage</a>
+                        <a href="#">Status</a>
+                        <a href="#">Age</a>
+                    </div>
+                </a>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="#">
+                    <img src="/static/images/ethernet-port.png">Ports<img src="/static/images/dropdown-icon-1.svg">
+                    <div class="dropdown-content">
+                        <a href="/devices/device/{{device.device_id}}/ports">Details</a>
+                        <hr>
+                        <a href="#">IP Address</a>
+                        <a href="#">ARP Table</a>
+                        <a href="#">Neighbours</a>
+                    </div>
+                </a>
+            </li>
+            <li>
+                <a href="#"><img src="/static/images/notification.png">Alerts</a>
+            </li>
+        </ul>
+    </div>
+    <div class="nav-right-2">
+        <ul class="nav-menu-3">
+            <li class="nav-item-2 dropdown">
+                <img src="/static/images/settings.png">
+                <img src="/static/images/dropdown-icon-1.svg">
+                <div class="dropdown-content-right">
+                    <a href="#">Properties</a>
+                    <hr>
+                    <a href="#">Ignore</a>
+                    <a href="#">Delete Device</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+    
+</div>
+
+{% endblock %}
