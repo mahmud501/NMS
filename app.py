@@ -92,7 +92,7 @@ def device_ports(device_id):
 @app.route("/devices/add", methods=["GET", "POST"])
 def add_device():
     if request.method == "GET":
-        return render_template("add_device.html")
+        return render_template("add_device.html",page_title="Add Device")
 
     # -------------------------------
     # Read form inputs
@@ -120,11 +120,12 @@ def add_device():
     
     if ok:
         flash("Device Added Successfully", "success")
-        return render_template("add_device.html", message=device_add)
+        return redirect(url_for('device_list', device_type='all'))
     else:
         # Keep form data and show error
         flash(device_add,"error")
         return render_template("add_device.html", 
+            page_title="Add Device",
             message=device_add,
             ip_address=ip,
             snmp_version=snmp_version,
@@ -136,6 +137,41 @@ def add_device():
         )
 
     # return redirect(f"/devices/{device_id}")
+
+@app.route("/device/delete")
+def delete_device():
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT device_id, ip_address FROM devices")
+    devices = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    return render_template("delete_device.html", page_title="Delete device", devices=devices)
+
+@app.route("/api/device/delete/", methods=["POST"])
+def api_delete_device():
+    device_id = request.form.get("device_id")
+    confirm = request.form.get("confirm_delete")
+
+    if not device_id or not confirm:
+        flash("Invalid delete request!", "error")
+        return redirect(url_for("delete_device"))
+
+    db = get_db()
+    cursor = db.cursor()
+    try:
+        cursor.execute("DELETE FROM devices WHERE device_id=%s", (device_id,))
+        db.commit()
+        flash("Device and all related data deleted successfully.", "success")
+    except Exception as e:
+        db.rollback()
+        flash(f"Delete failed: {str(e)}", "error")
+    finally:
+        cursor.close()
+        db.close()
+
+    return redirect(url_for("device_list", device_type="all"))
 
 @app.route("/ports/<interface_filter>")
 def interfaces_list(interface_filter="all"):
@@ -196,6 +232,45 @@ def device_throughput(device_id):
         "out": [-r["out_bps"] for r in result]
     }
     
+    return jsonify(data)
+
+@app.route("/api/device/<int:device_id>/memory")
+def device_memory(device_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT UNIX_TIMESTAMP(timestamp) * 1000 AS ts,
+            memory_usage_pct AS mem_use
+        FROM device_health
+        WHERE device_id=%s AND timestamp >= NOW() - INTERVAL 1 DAY
+        ORDER BY timestamp
+    """,(device_id,))
+    result=cursor.fetchall()
+    data = {
+        "labels": [r["ts"] for r in result],
+        "memory": [r["mem_use"] for r in result]
+    }
+
+    return jsonify(data)
+
+@app.route("/api/device/<int:device_id>/cpu")
+def device_cpu(device_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT UNIX_TIMESTAMP(timestamp) * 1000 AS ts,
+               cpu_usage_pct AS cpu_use
+        FROM device_health
+        WHERE device_id = %s 
+          AND timestamp >= NOW() - INTERVAL 1 DAY
+        ORDER BY timestamp
+    """, (device_id,))
+    result = cursor.fetchall()
+    
+    data = {
+        "labels": [r["ts"] for r in result],
+        "cpu": [r["cpu_use"] for r in result]
+    }
     return jsonify(data)
 
 if __name__ == "__main__":

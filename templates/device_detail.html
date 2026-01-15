@@ -18,11 +18,13 @@
         <p>{% if device.location|lower!='none' %}{{device.location}}{% endif %}</p>
     </div>
     <div class="device-graph-brief-1">
-        <div>
-            <p>will place memory usage graph</p>
+        <div style="max-height: 100%">
+            <canvas id="deviceMemoryChart"></canvas>
+            <p style="text-align: center;">Memory usage</p>
         </div>
         <div>
-            <p>will place processor graph</p>
+            <canvas id="deviceCpuChart"></canvas>
+            <p style="text-align: center;">CPU usage</p>
         </div>
     </div>
 </div>
@@ -219,6 +221,128 @@
 </div>
 
 <script>
+fetch("/api/device/{{ device.device_id }}/memory")
+  .then(res => res.json())
+  .then(data => {
+    const ctx = document.getElementById("deviceMemoryChart").getContext("2d");
+
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: data.labels,
+        datasets: [{
+          data: data.memory,
+          borderWidth: 2,
+          fill: true,               
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          hitRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+
+        events: [],
+        hover: { mode: null },
+        interaction: { mode: null },
+
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        },
+
+        scales: {
+          x: {
+            type: "time",
+            ticks: { display: false },
+            grid: { display: false },
+            border: { display: false },
+            title: { display: false }
+          },
+          y: {
+            min: 0,
+            max: 100,
+            ticks: { display: false },
+            grid: { display: false },
+            border: { display: false },
+            title: { display: false }
+          }
+        },
+
+        animation: false,
+
+        elements: {
+          line: {
+            borderJoinStyle: 'round'
+          }
+        }
+      }
+    });
+});
+
+fetch("/api/device/{{ device.device_id }}/cpu")
+  .then(res => res.json())
+  .then(data => {
+    const ctx = document.getElementById("deviceCpuChart").getContext("2d");
+
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: data.labels,
+        datasets: [{
+          data: data.cpu,
+          borderWidth: 2,
+          fill: true,               
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          hitRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+
+        events: [],
+        hover: { mode: null },
+        interaction: { mode: null },
+
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        },
+
+        scales: {
+          x: {
+            type: "time",
+            ticks: { display: false },
+            grid: { display: false },
+            border: { display: false },
+            title: { display: false }
+          },
+          y: {
+            min: 0,
+            max: 100,
+            ticks: { display: false },
+            grid: { display: false },
+            border: { display: false },
+            title: { display: false }
+          }
+        },
+
+        animation: false,
+
+        elements: {
+          line: {
+            borderJoinStyle: 'round'
+          }
+        }
+      }
+    });
+});
+
 fetch("/api/device/{{ device.device_id }}/throughput")
 .then(res => res.json())
 .then(data => {

@@ -103,8 +103,10 @@ def poll_interfaces():
             else:
                 # Insert new interface
                 cursor.execute("""
-                    INSERT INTO interfaces (device_id, if_index, name, description, mac_address, ipv4_address, speed, mtu, admin_status, oper_status, created_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                    INSERT INTO interfaces (
+                        device_id, if_index, name, description, mac_address, ipv4_address, speed, mtu, admin_status, oper_status, created_at
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
                 """, (device_id, if_index, name, description, mac_address, ipv4_address, speed, mtu, admin_status, oper_status))
 
             # Get interface_id

@@ -46,26 +46,28 @@ def start_polling_service():
             except Exception as e:
                 print(f"Error during health polling: {e}")
             last_health_poll = current_time
+
+        if current_time - last_arp_poll >= 600: 
+            try:
+                poll_arp()
+            except Exception as e:
+                print(f"Error during ARP polling: {e}")
+            last_arp_poll = current_time
+        if current_time - last_cdp_poll >= 1800:
+            try:
+                poll_cdp()
+            except Exception as e:
+                print(f"Error during CDP polling: {e}")
+            last_cdp_poll = current_time
+
         if current_time - last_interface_poll >= 300:
             try:
                 poll_interfaces()
             except Exception as e:
                 print(f"Error during interface polling: {e}")
             last_interface_poll = current_time
-            if current_time - last_arp_poll >= 600: 
-                try:
-                    poll_arp()
-                except Exception as e:
-                    print(f"Error during ARP polling: {e}")
-                last_arp_poll = current_time
-            if current_time - last_cdp_poll >= 1800:
-                try:
-                    poll_cdp()
-                except Exception as e:
-                    print(f"Error during CDP polling: {e}")
-                last_cdp_poll = current_time
             
-            time.sleep(60) # Sleep for 1 minute between checks
+        time.sleep(60) # Sleep for 1 minute between checks
 
 if __name__ == "__main__":
     # Run once for testing
