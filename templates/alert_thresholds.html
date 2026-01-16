@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}NMS - Alert Thresholds{% endblock %}
+
+{% block content %}
+<div class="thresholds-container">
+    <div class="header-section">
+        <h2>Alert Thresholds</h2>
+        <a href="/alerts/thresholds/add" class="btn btn-primary">Add New Threshold</a>
+    </div>
+
+    <div class="thresholds-table">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Device</th>
+                    <th>Interface</th>
+                    <th>Metric Type</th>
+                    <th>Warning Threshold</th>
+                    <th>Critical Threshold</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for threshold in thresholds %}
+                <tr>
+                    <td>
+                        <a href="/devices/device/{{ threshold.device_id }}">{{ threshold.hostname or 'Unknown' }}</a>
+                        <br><small>{{ threshold.ip_address }}</small>
+                    </td>
+                    <td>
+                        {% if threshold.interface_name %}
+                            {{ threshold.interface_name }}
+                        {% else %}
+                            All Interfaces
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-metric-{{ threshold.metric_type }}">
+                            {{ threshold.metric_type|replace('_', ' ')|title }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if threshold.warning_threshold %}
+                            {% if threshold.metric_type == 'interface_traffic' %}
+                                {{ "%.1f"|format(threshold.warning_threshold) }} Mbps
+                            {% else %}
+                                {{ "%.1f"|format(threshold.warning_threshold) }}%
+                            {% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if threshold.critical_threshold %}
+                            {% if threshold.metric_type == 'interface_traffic' %}
+                                {{ "%.1f"|format(threshold.critical_threshold) }} Mbps
+                            {% else %}
+                                {{ "%.1f"|format(threshold.critical_threshold) }}%
+                            {% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if threshold.is_active %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/alerts/thresholds/{{ threshold.threshold_id }}/edit" class="btn btn-sm btn-warning">Edit</a>
+                        <button class="btn btn-sm btn-danger delete-threshold-btn"
+                                data-threshold-id="{{ threshold.threshold_id }}"
+                                data-device="{{ threshold.hostname or threshold.ip_address }}"
+                                data-metric="{{ threshold.metric_type }}">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if not thresholds %}
+    <div class="no-thresholds">
+        <p>No alert thresholds configured.</p>
+        <p>Create thresholds to receive alerts when device metrics exceed specified limits.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Threshold Modal -->
+<div class="modal fade" id="deleteThresholdModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Alert Threshold</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the <strong id="delete-metric"></strong> threshold for device <strong id="delete-device"></strong>?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="delete-threshold-form" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete Threshold</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle delete threshold buttons
+    document.querySelectorAll('.delete-threshold-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const thresholdId = this.dataset.thresholdId;
+            const device = this.dataset.device;
+            const metric = this.dataset.metric.replace('_', ' ');
+
+            document.getElementById('delete-device').textContent = device;
+            document.getElementById('delete-metric').textContent = metric;
+            document.getElementById('delete-threshold-form').action = `/alerts/thresholds/${thresholdId}/delete`;
+
+            const modal = new bootstrap.Modal(document.getElementById('deleteThresholdModal'));
+            modal.show();
+        });
+    });
+});
+</script>
+
+<style>
+.thresholds-container {
+    padding: 20px;
+}
+
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.thresholds-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.badge-metric-cpu,
+.badge-metric-memory,
+.badge-metric-disk,
+.badge-metric-availability {
+    background: #007bff;
+    color: white;
+}
+
+.badge-metric-interface-traffic {
+    background: #28a745;
+    color: white;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    margin-right: 5px;
+}
+
+.no-thresholds {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+.no-thresholds p:first-child {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+</style>
+{% endblock %}

@@ -4,6 +4,7 @@ from modules.device_health import poll_device_health
 from modules.interface_poller import poll_interfaces
 from modules.arp_poller import poll_arp
 from modules.cdp_poller import poll_cdp
+from modules.alerts import check_alerts
 
 # def start_polling_service(interval_minutes=5):
 #     """
@@ -66,6 +67,13 @@ def start_polling_service():
             except Exception as e:
                 print(f"Error during interface polling: {e}")
             last_interface_poll = current_time
+
+        # Check for alerts every 5 minutes
+        if current_time - last_availability_poll >= 300:
+            try:
+                check_alerts()
+            except Exception as e:
+                print(f"Error during alert checking: {e}")
             
         time.sleep(60) # Sleep for 1 minute between checks
 

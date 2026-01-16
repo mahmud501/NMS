@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}NMS - Add Alert Threshold{% endblock %}
+
+{% block content %}
+<div class="add-threshold-container">
+    <div class="form-container">
+        <h2>Add Alert Threshold</h2>
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="device_id">Device *</label>
+                <select id="device_id" name="device_id" required>
+                    <option value="">Select a device</option>
+                    {% for device in devices %}
+                    <option value="{{ device.device_id }}">{{ device.hostname or 'Unknown' }} ({{ device.ip_address }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="interface_id">Interface (Optional)</label>
+                <select id="interface_id" name="interface_id">
+                    <option value="">All Interfaces</option>
+                    {% for interface in interfaces %}
+                    <option value="{{ interface.interface_id }}">{{ interface.hostname }} - {{ interface.name }}</option>
+                    {% endfor %}
+                </select>
+                <small class="form-text">Leave blank to apply threshold to all interfaces on the device</small>
+            </div>
+
+            <div class="form-group">
+                <label for="metric_type">Metric Type *</label>
+                <select id="metric_type" name="metric_type" required>
+                    <option value="">Select metric type</option>
+                    <option value="cpu">CPU Usage (%)</option>
+                    <option value="memory">Memory Usage (%)</option>
+                    <option value="disk">Disk Usage (%)</option>
+                    <option value="availability">Availability (%)</option>
+                    <option value="interface_traffic">Interface Traffic (Mbps)</option>
+                </select>
+            </div>
+
+            <div class="threshold-inputs">
+                <div class="form-group">
+                    <label for="warning_threshold">Warning Threshold</label>
+                    <input type="number" id="warning_threshold" name="warning_threshold" step="0.1" min="0">
+                    <small class="form-text">Alert when value exceeds this threshold</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="critical_threshold">Critical Threshold</label>
+                    <input type="number" id="critical_threshold" name="critical_threshold" step="0.1" min="0">
+                    <small class="form-text">Critical alert when value exceeds this threshold</small>
+                </div>
+            </div>
+
+            <div class="threshold-info">
+                <h4>Threshold Guidelines</h4>
+                <ul>
+                    <li><strong>CPU/Memory/Disk:</strong> Percentage values (0-100)</li>
+                    <li><strong>Availability:</strong> Percentage values (0-100), where 100 = always up</li>
+                    <li><strong>Interface Traffic:</strong> Mbps values for combined in/out traffic</li>
+                    <li><strong>Warning:</strong> Lower threshold for early notification</li>
+                    <li><strong>Critical:</strong> Higher threshold for urgent alerts</li>
+                </ul>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Create Threshold</button>
+                <a href="/alerts/thresholds" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const metricType = document.getElementById('metric_type');
+    const warningInput = document.getElementById('warning_threshold');
+    const criticalInput = document.getElementById('critical_threshold');
+
+    function updatePlaceholders() {
+        const metric = metricType.value;
+        if (metric === 'cpu') {
+            warningInput.placeholder = 'e.g., 70';
+            criticalInput.placeholder = 'e.g., 90';
+        } else if (metric === 'memory') {
+            warningInput.placeholder = 'e.g., 75';
+            criticalInput.placeholder = 'e.g., 95';
+        } else if (metric === 'disk') {
+            warningInput.placeholder = 'e.g., 80';
+            criticalInput.placeholder = 'e.g., 95';
+        } else if (metric === 'availability') {
+            warningInput.placeholder = 'e.g., 95';
+            criticalInput.placeholder = 'e.g., 99';
+        } else if (metric === 'interface_traffic') {
+            warningInput.placeholder = 'e.g., 50';
+            criticalInput.placeholder = 'e.g., 100';
+        }
+    }
+
+    metricType.addEventListener('change', updatePlaceholders);
+    updatePlaceholders(); // Set initial placeholders
+});
+</script>
+
+<style>
+.add-threshold-container {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.form-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 600px;
+}
+
+.form-container h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.form-text {
+    display: block;
+    margin-top: 0.25rem;
+    color: #666;
+    font-size: 0.875rem;
+}
+
+.threshold-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.threshold-info {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 2rem;
+}
+
+.threshold-info h4 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.threshold-info ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.threshold-info li {
+    margin-bottom: 0.25rem;
+    color: #666;
+}
+
+.form-actions {
+    margin-top: 2rem;
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}NMS - Performance Report{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <h2>Device Performance Report</h2>
+    <p class="report-period">Report Period: Last 7 days</p>
+
+    <div class="report-table">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Device Name</th>
+                    <th>IP Address</th>
+                    <th>CPU Usage</th>
+                    <th>Memory Usage</th>
+                    <th>Disk Usage</th>
+                    <th>Samples</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for device in data %}
+                <tr>
+                    <td>{{ device.hostname or 'Unknown' }}</td>
+                    <td>{{ device.ip_address }}</td>
+                    <td>
+                        {% if device.avg_cpu %}
+                            <div class="metric-display">
+                                <div class="metric-bar">
+                                    <div class="metric-fill cpu-fill" style="width: {{ device.avg_cpu }}%"></div>
+                                </div>
+                                <span class="metric-text">{{ "%.1f"|format(device.avg_cpu) }}% (Max: {{ "%.1f"|format(device.max_cpu) }}%)</span>
+                            </div>
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if device.avg_memory %}
+                            <div class="metric-display">
+                                <div class="metric-bar">
+                                    <div class="metric-fill memory-fill" style="width: {{ device.avg_memory }}%"></div>
+                                </div>
+                                <span class="metric-text">{{ "%.1f"|format(device.avg_memory) }}% (Max: {{ "%.1f"|format(device.max_memory) }}%)</span>
+                            </div>
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if device.avg_disk %}
+                            <div class="metric-display">
+                                <div class="metric-bar">
+                                    <div class="metric-fill disk-fill" style="width: {{ device.avg_disk }}%"></div>
+                                </div>
+                                <span class="metric-text">{{ "%.1f"|format(device.avg_disk) }}% (Max: {{ "%.1f"|format(device.max_disk) }}%)</span>
+                            </div>
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>{{ device.samples }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if not data %}
+    <div class="no-data">
+        <p>No performance data available for the selected period.</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.report-container {
+    padding: 20px;
+}
+
+.report-period {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.report-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.metric-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.metric-bar {
+    width: 60px;
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.metric-fill {
+    height: 100%;
+    border-radius: 4px;
+}
+
+.cpu-fill {
+    background: #007bff;
+}
+
+.memory-fill {
+    background: #28a745;
+}
+
+.disk-fill {
+    background: #ffc107;
+}
+
+.metric-text {
+    font-size: 0.8rem;
+    color: #666;
+    white-space: nowrap;
+}
+
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+</style>
+{% endblock %}

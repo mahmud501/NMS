@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}NMS - Alerts{% endblock %}
+
+{% block content %}
+<div class="alerts-container">
+    <h2>Active Alerts</h2>
+
+    <div class="alerts-actions">
+        <form method="POST" action="/alerts/check" style="display: inline;">
+            <button type="submit" class="btn btn-primary">Check for New Alerts</button>
+        </form>
+    </div>
+
+    <div class="alerts-table">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Device</th>
+                    <th>Type</th>
+                    <th>Severity</th>
+                    <th>Message</th>
+                    <th>Value</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alert in alerts %}
+                <tr class="alert-{{ alert.severity }}">
+                    <td>{{ alert.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>
+                        <a href="/devices/device/{{ alert.device_id }}">{{ alert.hostname or alert.ip_address }}</a>
+                        {% if alert.interface_name %}
+                        <br><small>{{ alert.interface_name }}</small>
+                        {% endif %}
+                    </td>
+                    <td>{{ alert.alert_type|title }}</td>
+                    <td>
+                        <span class="badge badge-{{ alert.severity }}">
+                            {{ alert.severity|title }}
+                        </span>
+                    </td>
+                    <td>{{ alert.message }}</td>
+                    <td>
+                        {% if alert.value is not none %}
+                            {% if alert.alert_type == 'interface_traffic' %}
+                                {{ "%.2f"|format(alert.value) }} Mbps
+                            {% else %}
+                                {{ "%.1f"|format(alert.value) }}%
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if not alert.is_acknowledged %}
+                        <button class="btn btn-sm btn-warning acknowledge-btn"
+                                data-alert-id="{{ alert.alert_id }}">Acknowledge</button>
+                        {% endif %}
+                        <button class="btn btn-sm btn-success resolve-btn"
+                                data-alert-id="{{ alert.alert_id }}">Resolve</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if not alerts %}
+    <div class="no-alerts">
+        <p>No active alerts at this time.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle acknowledge buttons
+    document.querySelectorAll('.acknowledge-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const alertId = this.dataset.alertId;
+            fetch(`/api/alerts/acknowledge/${alertId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        });
+    });
+
+    // Handle resolve buttons
+    document.querySelectorAll('.resolve-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const alertId = this.dataset.alertId;
+            fetch(`/api/alerts/resolve/${alertId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        });
+    });
+});
+</script>
+
+<style>
+.alerts-container {
+    padding: 20px;
+}
+
+.alerts-actions {
+    margin-bottom: 20px;
+}
+
+.alerts-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.badge-critical {
+    background: #dc3545;
+    color: white;
+}
+
+.badge-warning {
+    background: #ffc107;
+    color: black;
+}
+
+.badge-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.alert-critical {
+    background-color: #f8d7da !important;
+}
+
+.alert-warning {
+    background-color: #fff3cd !important;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+}
+
+.no-alerts {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}NMS - Edit Alert Threshold{% endblock %}
+
+{% block content %}
+<div class="edit-threshold-container">
+    <div class="form-container">
+        <h2>Edit Alert Threshold</h2>
+        <p class="threshold-device">Device: {{ threshold.hostname or 'Unknown' }} ({{ threshold.ip_address }})</p>
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="device_id">Device</label>
+                <select id="device_id" name="device_id" disabled>
+                    {% for device in devices %}
+                    <option value="{{ device.device_id }}" {% if device.device_id == threshold.device_id %}selected{% endif %}>
+                        {{ device.hostname or 'Unknown' }} ({{ device.ip_address }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <small class="form-text">Device cannot be changed</small>
+            </div>
+
+            <div class="form-group">
+                <label for="interface_id">Interface</label>
+                <select id="interface_id" name="interface_id" disabled>
+                    <option value="">All Interfaces</option>
+                    {% for interface in interfaces %}
+                    <option value="{{ interface.interface_id }}" {% if interface.interface_id == threshold.interface_id %}selected{% endif %}>
+                        {{ interface.hostname }} - {{ interface.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <small class="form-text">Interface cannot be changed</small>
+            </div>
+
+            <div class="form-group">
+                <label for="metric_type">Metric Type</label>
+                <select id="metric_type" name="metric_type" disabled>
+                    <option value="cpu" {% if threshold.metric_type == 'cpu' %}selected{% endif %}>CPU Usage (%)</option>
+                    <option value="memory" {% if threshold.metric_type == 'memory' %}selected{% endif %}>Memory Usage (%)</option>
+                    <option value="disk" {% if threshold.metric_type == 'disk' %}selected{% endif %}>Disk Usage (%)</option>
+                    <option value="availability" {% if threshold.metric_type == 'availability' %}selected{% endif %}>Availability (%)</option>
+                    <option value="interface_traffic" {% if threshold.metric_type == 'interface_traffic' %}selected{% endif %}>Interface Traffic (Mbps)</option>
+                </select>
+                <small class="form-text">Metric type cannot be changed</small>
+            </div>
+
+            <div class="threshold-inputs">
+                <div class="form-group">
+                    <label for="warning_threshold">Warning Threshold</label>
+                    <input type="number" id="warning_threshold" name="warning_threshold" step="0.1" min="0"
+                           value="{{ threshold.warning_threshold or '' }}">
+                    <small class="form-text">Alert when value exceeds this threshold</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="critical_threshold">Critical Threshold</label>
+                    <input type="number" id="critical_threshold" name="critical_threshold" step="0.1" min="0"
+                           value="{{ threshold.critical_threshold or '' }}">
+                    <small class="form-text">Critical alert when value exceeds this threshold</small>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="is_active" {% if threshold.is_active %}checked{% endif %}>
+                    Threshold Active
+                </label>
+            </div>
+
+            <div class="threshold-info">
+                <h4>Current Configuration</h4>
+                <p><strong>Created:</strong> {{ threshold.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p><strong>Status:</strong>
+                    {% if threshold.is_active %}
+                        <span class="badge badge-success">Active</span>
+                    {% else %}
+                        <span class="badge badge-secondary">Inactive</span>
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Update Threshold</button>
+                <a href="/alerts/thresholds" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.edit-threshold-container {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.form-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 600px;
+}
+
+.form-container h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.threshold-device {
+    text-align: center;
+    color: #666;
+    margin-bottom: 2rem;
+    font-weight: 500;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-group input:disabled,
+.form-group select:disabled {
+    background: #f8f9fa;
+    cursor: not-allowed;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.form-text {
+    display: block;
+    margin-top: 0.25rem;
+    color: #666;
+    font-size: 0.875rem;
+}
+
+.threshold-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.threshold-info {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 2rem;
+}
+
+.threshold-info h4 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.threshold-info p {
+    margin: 0.25rem 0;
+    color: #666;
+}
+
+.badge {
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+}
+
+.badge-success {
+    background: #28a745;
+    color: white;
+}
+
+.badge-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.form-actions {
+    margin-top: 2rem;
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+</style>
+{% endblock %}

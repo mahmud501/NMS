@@ -83,7 +83,9 @@
                     <a href="#">Properties</a>
                     <hr>
                     <a href="#">Ignore</a>
-                    <a href="#">Delete Device</a>
+                    {% if current_user.role_name == 'admin' %}
+                        <a href="#">Delete Device</a>
+                    {% endif %}
                 </div>
             </li>
         </ul>
