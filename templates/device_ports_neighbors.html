@@ -116,9 +116,7 @@
             <thead>
                 <tr>
                     <th>Local Interface</th>
-                    <th>Remote Device</th>
-                    <th>Remote Interface</th>
-                    <th>Protocol</th>
+                    <th>Remote Device/Platform/Details</th>
                     <th>Last Seen</th>
                 </tr>
             </thead>
@@ -129,19 +127,10 @@
                         <strong>{{neighbor.local_interface}}</strong>
                     </td>
                     <td>
-                        {% if neighbor.remote_device %}
-                            <code>{{neighbor.remote_device}}</code>
-                        {% else %}
-                            --
-                        {% endif %}
+                        {{neighbor.neighbor_port}} on {{neighbor.neighbor_device}}
+                        <p>{{neighbor.platform}}</p>
                     </td>
-                    <td>{{neighbor.remote_interface or '--'}}</td>
-                    <td>
-                        <span class="protocol-badge {{neighbor.protocol|lower}}">
-                            {{neighbor.protocol or 'Unknown'}}
-                        </span>
-                    </td>
-                    <td>{{neighbor.last_seen or '--'}}</td>
+                    <td>{{neighbor.timestamp or '--'}}</td>
                 </tr>
                 {% endfor %}
                 {% if not neighbors %}

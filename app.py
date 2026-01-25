@@ -208,10 +208,9 @@ def device_ports_neighbors(device_id):
     
     # Get neighbor information (LLDP/CDP neighbors)
     cursor.execute("""
-        SELECT local_interface, remote_device, remote_interface, protocol, last_seen
-        FROM neighbors
+        SELECT local_interface, neighbor_device, neighbor_port, neighbor_ip, platform, timestamp
+        FROM cdp_neighbors
         WHERE device_id = %s
-        ORDER BY last_seen DESC
     """, (device_id,))
     neighbors = cursor.fetchall()
     
@@ -490,17 +489,31 @@ def interfaces_list(interface_filter="all"):
 @app.route("/api/device/<int:device_id>/throughput")
 @login_required
 def device_throughput(device_id):
+    # Get time frame from query parameters, default to 1 day
+    time_frame = request.args.get('time', '1d')
+    
+    # Convert time frame to MySQL INTERVAL
+    time_intervals = {
+        '1h': 'INTERVAL 1 HOUR',
+        '6h': 'INTERVAL 6 HOUR', 
+        '1d': 'INTERVAL 1 DAY',
+        '7d': 'INTERVAL 7 DAY',
+        '30d': 'INTERVAL 30 DAY'
+    }
+    
+    interval = time_intervals.get(time_frame, 'INTERVAL 1 DAY')
+    
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT UNIX_TIMESTAMP(s.timestamp) * 1000 AS ts,
             SUM(s.in_bps) AS in_bps,
             SUM(s.out_bps) AS out_bps
         FROM interface_stats s
         JOIN interfaces i ON s.interface_id = i.interface_id
         WHERE i.device_id= %s
-        AND s.timestamp >= NOW() - INTERVAL 1 DAY
+        AND s.timestamp >= NOW() - {interval}
         GROUP BY ts
         ORDER BY ts
     """, (device_id,)
@@ -517,16 +530,64 @@ def device_throughput(device_id):
     
     return jsonify(data)
 
+@app.route("/api/device/<int:device_id>/cpu")
+@login_required
+def device_cpu(device_id):
+    # Get time frame from query parameters, default to 1 day
+    time_frame = request.args.get('time', '1d')
+    
+    # Convert time frame to MySQL INTERVAL
+    time_intervals = {
+        '1h': 'INTERVAL 1 HOUR',
+        '6h': 'INTERVAL 6 HOUR', 
+        '1d': 'INTERVAL 1 DAY',
+        '7d': 'INTERVAL 7 DAY',
+        '30d': 'INTERVAL 30 DAY'
+    }
+    
+    interval = time_intervals.get(time_frame, 'INTERVAL 1 DAY')
+    
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute(f"""
+        SELECT UNIX_TIMESTAMP(timestamp) * 1000 AS ts,
+            cpu_usage_pct AS cpu_use
+        FROM device_health
+        WHERE device_id=%s AND timestamp >= NOW() - {interval}
+        ORDER BY timestamp
+    """,(device_id,))
+    result=cursor.fetchall()
+    data = {
+        "labels": [r["ts"] for r in result],
+        "cpu": [r["cpu_use"] for r in result]
+    }
+
+    return jsonify(data)
+
 @app.route("/api/device/<int:device_id>/memory")
 @login_required
 def device_memory(device_id):
+    # Get time frame from query parameters, default to 1 day
+    time_frame = request.args.get('time', '1d')
+    
+    # Convert time frame to MySQL INTERVAL
+    time_intervals = {
+        '1h': 'INTERVAL 1 HOUR',
+        '6h': 'INTERVAL 6 HOUR', 
+        '1d': 'INTERVAL 1 DAY',
+        '7d': 'INTERVAL 7 DAY',
+        '30d': 'INTERVAL 30 DAY'
+    }
+    
+    interval = time_intervals.get(time_frame, 'INTERVAL 1 DAY')
+    
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT UNIX_TIMESTAMP(timestamp) * 1000 AS ts,
             memory_usage_pct AS mem_use
         FROM device_health
-        WHERE device_id=%s AND timestamp >= NOW() - INTERVAL 1 DAY
+        WHERE device_id=%s AND timestamp >= NOW() - {interval}
         ORDER BY timestamp
     """,(device_id,))
     result=cursor.fetchall()
@@ -537,22 +598,36 @@ def device_memory(device_id):
 
     return jsonify(data)
 
-@app.route("/api/device/<int:device_id>/cpu")
+@app.route("/api/device/<int:device_id>/availability")
 @login_required
-def device_cpu(device_id):
+def device_availability(device_id):
+    # Get time frame from query parameters, default to 1 day
+    time_frame = request.args.get('time', '1d')
+    
+    # Convert time frame to MySQL INTERVAL
+    time_intervals = {
+        '1h': 'INTERVAL 1 HOUR',
+        '6h': 'INTERVAL 6 HOUR', 
+        '1d': 'INTERVAL 1 DAY',
+        '7d': 'INTERVAL 7 DAY',
+        '30d': 'INTERVAL 30 DAY'
+    }
+    
+    interval = time_intervals.get(time_frame, 'INTERVAL 1 DAY')
+    
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT UNIX_TIMESTAMP(timestamp) * 1000 AS ts,
-            cpu_usage_pct AS cpu_use
-        FROM device_health
-        WHERE device_id=%s AND timestamp >= NOW() - INTERVAL 1 DAY
+            CASE WHEN status = 'UP' THEN 1 ELSE 0 END AS availability
+        FROM device_availability
+        WHERE device_id=%s AND timestamp >= NOW() - {interval}
         ORDER BY timestamp
     """,(device_id,))
     result=cursor.fetchall()
     data = {
         "labels": [r["ts"] for r in result],
-        "cpu": [r["cpu_use"] for r in result]
+        "availability": [r["availability"] for r in result]
     }
 
     return jsonify(data)

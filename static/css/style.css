@@ -1449,3 +1449,30 @@ a:hover {
 .activity-list {
     color: #666;
 }
+
+/* System Graphs Grid */
+.system-graphs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+.system-graph-item {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.system-graph-item h4 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.system-graph-item canvas {
+    width: 100% !important;
+    height: 250px !important;
+}
