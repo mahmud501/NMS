@@ -98,11 +98,76 @@
             </div>
         {% endif %}
     {% endwith %}
+
+    <!-- Alert Popups Container -->
+    <div id="alert-popups-container"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+    // Alert popup functionality
+    let lastAlertCheck = new Date();
+
+    function checkForNewAlerts() {
+        fetch('/api/alerts/check', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.new_alerts && data.new_alerts.length > 0) {
+                data.new_alerts.forEach(alert => {
+                    showAlertPopup(alert);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error checking for alerts:', error);
+        });
+    }
+
+    function showAlertPopup(alert) {
+        const container = document.getElementById('alert-popups-container');
+
+        const popup = document.createElement('div');
+        popup.className = `alert-popup alert-${alert.severity}`;
+        popup.innerHTML = `
+            <div class="alert-popup-header">
+                <strong>New ${alert.severity.toUpperCase()} Alert</strong>
+                <span class="alert-popup-close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            </div>
+            <div class="alert-popup-body">
+                <p><strong>Device:</strong> ${alert.device_name}</p>
+                <p><strong>Type:</strong> ${alert.alert_type.toUpperCase()}</p>
+                <p>${alert.message}</p>
+            </div>
+            <div class="alert-popup-actions">
+                <button class="btn btn-sm btn-primary" onclick="window.location.href='/alerts'">View All Alerts</button>
+            </div>
+        `;
+
+        container.appendChild(popup);
+
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (popup.parentElement) {
+                popup.remove();
+            }
+        }, 10000);
+    }
+
+    // Check for alerts every 30 seconds
+    setInterval(checkForNewAlerts, 30000);
+
+    // Initial check on page load (with a small delay)
+    setTimeout(checkForNewAlerts, 2000);
+    </script>
 
     <div class="container">
         {% block content %}

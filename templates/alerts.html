@@ -56,6 +56,8 @@
                         <button class="btn btn-sm btn-warning acknowledge-btn"
                                 data-alert-id="{{ alert.alert_id }}">Acknowledge</button>
                         {% endif %}
+                        <button class="btn btn-sm btn-secondary ignore-btn"
+                                data-alert-id="{{ alert.alert_id }}">Ignore</button>
                         <button class="btn btn-sm btn-success resolve-btn"
                                 data-alert-id="{{ alert.alert_id }}">Resolve</button>
                     </td>
@@ -102,6 +104,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: {
                     'Content-Type': 'application/json',
                 }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        });
+    });
+
+    // Handle ignore buttons
+    document.querySelectorAll('.ignore-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const alertId = this.dataset.alertId;
+            const duration = prompt('Enter ignore duration in minutes (leave empty for permanent):');
+            const ignoreDuration = duration ? parseInt(duration) : null;
+
+            fetch(`/api/alerts/ignore/${alertId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ ignore_duration_minutes: ignoreDuration })
             })
             .then(response => response.json())
             .then(data => {

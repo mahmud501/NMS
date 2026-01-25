@@ -3,6 +3,7 @@ from modules.db import get_db
 from modules.snmp_poller import snmp_get
 from datetime import datetime
 from modules.utils import decrypt_password
+from modules.notifications import send_alert_notifications
 
 def check_alerts():
     """
@@ -18,10 +19,18 @@ def check_alerts():
         JOIN devices d ON t.device_id = d.device_id
         LEFT JOIN interfaces i ON t.interface_id = i.interface_id
         WHERE t.is_active = TRUE
+        AND NOT EXISTS (
+            SELECT 1 FROM alerts a
+            WHERE a.device_id = t.device_id
+            AND (a.interface_id = t.interface_id OR (a.interface_id IS NULL AND t.interface_id IS NULL))
+            AND a.alert_type = t.metric_type
+            AND a.is_ignored = TRUE
+            AND (a.ignore_until IS NULL OR a.ignore_until > NOW())
+        )
     """)
     thresholds = cursor.fetchall()
 
-    alerts_generated = 0
+    alerts_generated = []
 
     for threshold in thresholds:
         device_id = threshold['device_id']
@@ -108,11 +117,29 @@ def check_alerts():
                     INSERT INTO alerts (device_id, interface_id, alert_type, severity, message, value, threshold)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """, (device_id, interface_id, metric_type, severity, message, current_value, threshold_value))
-                alerts_generated += 1
+                alert_id = cursor.lastrowid
+
+                alert_data = {
+                    'alert_id': alert_id,
+                    'device_name': threshold['hostname'] or threshold['ip_address'],
+                    'severity': severity,
+                    'message': message,
+                    'alert_type': metric_type,
+                    'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+
+                alerts_generated.append(alert_data)
+
+                # Send email notifications asynchronously (in a real app, this should be queued)
+                try:
+                    send_alert_notifications(alert_id, alert_data)
+                except Exception as e:
+                    print(f"Error sending notifications for alert {alert_id}: {e}")
 
     db.commit()
     db.close()
-    print(f"Generated {alerts_generated} new alerts.")
+    print(f"Generated {len(alerts_generated)} new alerts.")
+    return alerts_generated
 
 def generate_alert_message(threshold, current_value, severity):
     """Generate a human-readable alert message."""
@@ -181,3 +208,45 @@ def resolve_alert(alert_id):
     db.commit()
     cursor.close()
     db.close()
+
+def ignore_alert(alert_id, user_id, ignore_duration_minutes=None):
+    """Ignore an alert for a specified duration or permanently."""
+    db = get_db()
+    cursor = db.cursor()
+
+    if ignore_duration_minutes:
+        from datetime import timedelta
+        ignore_until = datetime.now() + timedelta(minutes=ignore_duration_minutes)
+        cursor.execute("""
+            UPDATE alerts
+            SET is_ignored = TRUE, ignored_by = %s, ignored_at = NOW(), ignore_until = %s
+            WHERE alert_id = %s
+        """, (user_id, ignore_until, alert_id))
+    else:
+        cursor.execute("""
+            UPDATE alerts
+            SET is_ignored = TRUE, ignored_by = %s, ignored_at = NOW()
+            WHERE alert_id = %s
+        """, (user_id, alert_id))
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+def get_active_alerts():
+    """Get all active (unresolved and not ignored) alerts."""
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT a.*, d.hostname, d.ip_address, i.name as interface_name
+        FROM alerts a
+        JOIN devices d ON a.device_id = d.device_id
+        LEFT JOIN interfaces i ON a.interface_id = i.interface_id
+        WHERE a.resolved_at IS NULL
+        AND (a.is_ignored = FALSE OR (a.is_ignored = TRUE AND a.ignore_until IS NOT NULL AND a.ignore_until < NOW()))
+        ORDER BY a.created_at DESC
+    """)
+    alerts = cursor.fetchall()
+    cursor.close()
+    db.close()
+    return alerts

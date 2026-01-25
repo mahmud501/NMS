@@ -1,0 +1,450 @@
+{% extends "base.html" %}
+
+{% block title %}NMS - {{page_title}}{% endblock %}
+
+{% block content %}
+
+<div class="gap-view"></div>
+
+<div class="device-detail-brief {{device.status|lower}}">
+    <div class="medium-vendor-icon">
+        <img src=" {% if device.vendor|lower=='cisco' %}/static/images/cisco.png
+                    {% elif device.vendor|lower=='mikrotik' %}/static/images/mikrotik.png
+                    {%elif device.vendor|lower=='linux'%}/static/images/linux.png
+                    {%else%}/static/images/router.png{% endif %}" alt="vendor_icon">
+    </div>
+    <div class="device-ip-brief-1">
+        <a href="/devices/device/{{device.device_id}}">{{device.ip_address}}</a>
+        <p>{% if device.location|lower!='none' %}{{device.location}}{% endif %}</p>
+    </div>
+    <div class="device-graph-brief-1">
+        <div style="max-height: 100%">
+            <canvas id="deviceMemoryChart"></canvas>
+            <p style="text-align: center;">Memory usage</p>
+        </div>
+        <div>
+            <canvas id="deviceCpuChart"></canvas>
+            <p style="text-align: center;">CPU usage</p>
+        </div>
+    </div>
+</div>
+
+<div class="device-detail-nav-1">
+    <div class="device-nav-bar-1">
+        <ul class="nav-menu-2">
+            <li class="nav-item-2">
+                <a href="/devices/device/{{device.device_id}}"><img src="/static/images/overview-1.png">Overview</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="#">
+                    <img src="/static/images/graph.png">Graphs<img src="/static/images/dropdown-icon-1.svg">
+                    <div class="dropdown-content">
+                        <a href="/devices/device/{{device.device_id}}/graphs/system">System</a>
+                        <a href="/devices/device/{{device.device_id}}/graphs/processor">Processor</a>
+                        <a href="/devices/device/{{device.device_id}}/graphs/memory">Memory</a>
+                        <a href="/devices/device/{{device.device_id}}/graphs/storage">Storage</a>
+                    </div>
+                </a>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="#">
+                    <img src="/static/images/health.png">Health<img src="/static/images/dropdown-icon-1.svg">
+                    <div class="dropdown-content">
+                        <a href="/devices/device/{{device.device_id}}/health/processor">Processor</a>
+                        <a href="/devices/device/{{device.device_id}}/health/memory">Memory</a>
+                        <a href="/devices/device/{{device.device_id}}/health/storage">Storage</a>
+                        <a href="/devices/device/{{device.device_id}}/health/status">Status</a>
+                        <a href="/devices/device/{{device.device_id}}/health/age">Age</a>
+                    </div>
+                </a>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="#">
+                    <img src="/static/images/ethernet-port.png">Ports<img src="/static/images/dropdown-icon-1.svg">
+                    <div class="dropdown-content">
+                        <a href="/devices/device/{{device.device_id}}/ports">Details</a>
+                        <hr>
+                        <a href="#">IP Address</a>
+                        <a href="#">ARP Table</a>
+                        <a href="#">Neighbours</a>
+                    </div>
+                </a>
+            </li>
+            <li>
+                <a href="/devices/device/{{device.device_id}}/alerts"><img src="/static/images/notification.png">Alerts</a>
+            </li>
+        </ul>
+    </div>
+    <div class="nav-right-2">
+        <ul class="nav-menu-3">
+            <li class="nav-item-2 dropdown">
+                <img src="/static/images/settings.png">
+                <img src="/static/images/dropdown-icon-1.svg">
+                <div class="dropdown-content-right">
+                    <a href="/devices/device/{{device.device_id}}/properties">Properties</a>
+                    <hr>
+                    <a href="#">Ignore</a>
+                    {% if current_user.role_name == 'admin' %}
+                        <a href="#">Delete Device</a>
+                    {% endif %}
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div class="device-health-container">
+    <h3>{{health_type.title()}} Health Information</h3>
+    
+    {% if health_type == 'processor' %}
+        <div class="health-metrics">
+            <div class="metric-card">
+                <h4>Current CPU Usage</h4>
+                <div class="metric-value" id="current-cpu">--</div>
+                <div class="metric-chart">
+                    <canvas id="cpuHealthChart"></canvas>
+                </div>
+            </div>
+            <div class="metric-stats">
+                <table class="health-stats-table">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                        <th>Status</th>
+                    </tr>
+                    <tr>
+                        <td>Average (24h)</td>
+                        <td id="avg-cpu">--</td>
+                        <td id="avg-cpu-status">--</td>
+                    </tr>
+                    <tr>
+                        <td>Peak (24h)</td>
+                        <td id="peak-cpu">--</td>
+                        <td id="peak-cpu-status">--</td>
+                    </tr>
+                    <tr>
+                        <td>Current</td>
+                        <td id="current-cpu-table">--</td>
+                        <td id="current-cpu-table-status">--</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    {% elif health_type == 'memory' %}
+        <div class="health-metrics">
+            <div class="metric-card">
+                <h4>Current Memory Usage</h4>
+                <div class="metric-value" id="current-memory">--</div>
+                <div class="metric-chart">
+                    <canvas id="memoryHealthChart"></canvas>
+                </div>
+            </div>
+            <div class="metric-stats">
+                <table class="health-stats-table">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                        <th>Status</th>
+                    </tr>
+                    <tr>
+                        <td>Average (24h)</td>
+                        <td id="avg-memory">--</td>
+                        <td id="avg-memory-status">--</td>
+                    </tr>
+                    <tr>
+                        <td>Peak (24h)</td>
+                        <td id="peak-memory">--</td>
+                        <td id="peak-memory-status">--</td>
+                    </tr>
+                    <tr>
+                        <td>Current</td>
+                        <td id="current-memory-table">--</td>
+                        <td id="current-memory-table-status">--</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    {% elif health_type == 'storage' %}
+        <div class="health-metrics">
+            <div class="metric-card">
+                <h4>Storage Usage</h4>
+                <div class="metric-value">--</div>
+                <p>Storage monitoring not yet implemented</p>
+            </div>
+        </div>
+    {% elif health_type == 'status' %}
+        <div class="health-metrics">
+            <div class="status-info">
+                <h4>Device Status</h4>
+                <div class="status-indicator {{device.status|lower}}">
+                    <span class="status-dot"></span>
+                    {{device.status|upper}}
+                </div>
+                <div class="status-details">
+                    <p><strong>Last Polled:</strong> {{device.last_polled_time or 'Never'}}</p>
+                    <p><strong>Uptime:</strong> {{device.formatted_uptime or 'Unknown'}}</p>
+                    <p><strong>Last Reboot:</strong> {{device.last_reboot_time or 'Unknown'}}</p>
+                </div>
+            </div>
+        </div>
+    {% elif health_type == 'age' %}
+        <div class="health-metrics">
+            <div class="age-info">
+                <h4>Device Age Information</h4>
+                <div class="age-details">
+                    <p><strong>Created:</strong> {{device.created_at or 'Unknown'}}</p>
+                    <p><strong>Last Polled:</strong> {{device.last_polled_time or 'Never'}}</p>
+                    <p><strong>Model:</strong> {{device.model or 'Unknown'}}</p>
+                    <p><strong>Serial:</strong> {{device.serial_number or 'Unknown'}}</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// Memory chart for brief
+fetch("/api/device/{{ device.device_id }}/memory")
+  .then(res => res.json())
+  .then(data => {
+    const ctx = document.getElementById("deviceMemoryChart").getContext("2d");
+
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: data.labels,
+        datasets: [{
+          data: data.memory,
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          hitRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        events: [],
+        hover: { mode: null },
+        interaction: { mode: null },
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        },
+        scales: {
+          x: {
+            type: "time",
+            ticks: { display: false },
+            grid: { display: false },
+            border: { display: false },
+            title: { display: false }
+          },
+          y: {
+            min: 0,
+            max: 100,
+            ticks: { display: false },
+            grid: { display: false },
+            border: { display: false },
+            title: { display: false }
+          }
+        },
+        animation: false,
+        elements: {
+          line: {
+            borderJoinStyle: 'round'
+          }
+        }
+      }
+    });
+});
+
+// CPU chart for brief
+fetch("/api/device/{{ device.device_id }}/cpu")
+  .then(res => res.json())
+  .then(data => {
+    const ctx = document.getElementById("deviceCpuChart").getContext("2d");
+
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: data.labels,
+        datasets: [{
+          data: data.cpu,
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          hitRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        events: [],
+        hover: { mode: null },
+        interaction: { mode: null },
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        },
+        scales: {
+          x: {
+            type: "time",
+            ticks: { display: false },
+            grid: { display: false },
+            border: { display: false },
+            title: { display: false }
+          },
+          y: {
+            min: 0,
+            max: 100,
+            ticks: { display: false },
+            grid: { display: false },
+            border: { display: false },
+            title: { display: false }
+          }
+        },
+        animation: false,
+        elements: {
+          line: {
+            borderJoinStyle: 'round'
+          }
+        }
+      }
+    });
+});
+
+// Health-specific charts and data
+{% if health_type == 'processor' %}
+fetch("/api/device/{{ device.device_id }}/cpu")
+.then(res => res.json())
+.then(data => {
+  // Calculate stats
+  const cpuValues = data.cpu.filter(v => v !== null && v !== undefined);
+  const avgCpu = cpuValues.length > 0 ? (cpuValues.reduce((a, b) => a + b, 0) / cpuValues.length).toFixed(1) : 0;
+  const peakCpu = cpuValues.length > 0 ? Math.max(...cpuValues).toFixed(1) : 0;
+  const currentCpu = cpuValues.length > 0 ? cpuValues[cpuValues.length - 1].toFixed(1) : 0;
+
+  // Update display
+  document.getElementById('current-cpu').textContent = currentCpu + '%';
+  document.getElementById('avg-cpu').textContent = avgCpu + '%';
+  document.getElementById('peak-cpu').textContent = peakCpu + '%';
+  document.getElementById('current-cpu-table').textContent = currentCpu + '%';
+
+  // Status indicators
+  const getStatus = (value) => value > 90 ? 'Critical' : value > 75 ? 'Warning' : 'Normal';
+  document.getElementById('avg-cpu-status').textContent = getStatus(avgCpu);
+  document.getElementById('peak-cpu-status').textContent = getStatus(peakCpu);
+  document.getElementById('current-cpu-table-status').textContent = getStatus(currentCpu);
+
+  // Chart
+  const ctx = document.getElementById("cpuHealthChart").getContext("2d");
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: data.labels,
+      datasets: [{
+        label: "CPU Usage %",
+        data: data.cpu,
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0,
+        borderColor: 'rgba(255, 159, 64, 1)',
+        backgroundColor: 'rgba(255, 159, 64, 0.2)'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          type: "time",
+          time: {
+            unit: "hour",
+            stepSize: 3
+          }
+        },
+        y: {
+          min: 0,
+          max: 100,
+          ticks: {
+            callback: function(value) {
+              return value + '%';
+            }
+          }
+        }
+      }
+    }
+  });
+});
+{% elif health_type == 'memory' %}
+fetch("/api/device/{{ device.device_id }}/memory")
+.then(res => res.json())
+.then(data => {
+  // Calculate stats
+  const memValues = data.memory.filter(v => v !== null && v !== undefined);
+  const avgMem = memValues.length > 0 ? (memValues.reduce((a, b) => a + b, 0) / memValues.length).toFixed(1) : 0;
+  const peakMem = memValues.length > 0 ? Math.max(...memValues).toFixed(1) : 0;
+  const currentMem = memValues.length > 0 ? memValues[memValues.length - 1].toFixed(1) : 0;
+
+  // Update display
+  document.getElementById('current-memory').textContent = currentMem + '%';
+  document.getElementById('avg-memory').textContent = avgMem + '%';
+  document.getElementById('peak-memory').textContent = peakMem + '%';
+  document.getElementById('current-memory-table').textContent = currentMem + '%';
+
+  // Status indicators
+  const getStatus = (value) => value > 90 ? 'Critical' : value > 75 ? 'Warning' : 'Normal';
+  document.getElementById('avg-memory-status').textContent = getStatus(avgMem);
+  document.getElementById('peak-memory-status').textContent = getStatus(peakMem);
+  document.getElementById('current-memory-table-status').textContent = getStatus(currentMem);
+
+  // Chart
+  const ctx = document.getElementById("memoryHealthChart").getContext("2d");
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: data.labels,
+      datasets: [{
+        label: "Memory Usage %",
+        data: data.memory,
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0,
+        borderColor: 'rgba(54, 162, 235, 1)',
+        backgroundColor: 'rgba(54, 162, 235, 0.2)'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          type: "time",
+          time: {
+            unit: "hour",
+            stepSize: 3
+          }
+        },
+        y: {
+          min: 0,
+          max: 100,
+          ticks: {
+            callback: function(value) {
+              return value + '%';
+            }
+          }
+        }
+      }
+    }
+  });
+});
+{% endif %}
+</script>
+
+{% endblock %}

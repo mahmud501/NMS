@@ -1,8 +1,13 @@
 from cryptography.fernet import Fernet
+import bcrypt
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Fernet key for SNMP credentials (two-way encryption)
+snmp_key = os.getenv('SNMP_ENCRYPT_KEY').encode()
+snmp_cipher = Fernet(snmp_key)
 
 def format_time(timeticks):
     """ Convert timeticks in Human readable format """
@@ -30,28 +35,50 @@ def format_time(timeticks):
         time_parts.append(f"{seconds}s")
 
     time = " ".join(time_parts)
- 
-    return time    
- 
-key = os.getenv('SNMP_ENCRYPT_KEY').encode()
-cipher = Fernet(key)
 
-def encrypt_password(plain_password):
+    return time
+
+# ===== SNMP CREDENTIALS (Two-way encryption) =====
+def encrypt_snmp_password(plain_password):
+    """Encrypt SNMP passwords using Fernet (reversible)"""
     if not plain_password:
         return None
     plain_bytes = plain_password.encode('utf-8')
-    encrypted_bytes = cipher.encrypt(plain_bytes)
+    encrypted_bytes = snmp_cipher.encrypt(plain_bytes)
     return encrypted_bytes.decode('utf-8')
 
-def decrypt_password(encrypted_password):
+def decrypt_snmp_password(encrypted_password):
+    """Decrypt SNMP passwords using Fernet"""
     if not encrypted_password:
         return None
     try:
         encrypted_bytes = encrypted_password.encode('utf-8')
-        plain_bytes = cipher.decrypt(encrypted_bytes)
+        plain_bytes = snmp_cipher.decrypt(encrypted_bytes)
         return plain_bytes.decode('utf-8')
     except:
         return None
+
+# ===== USER PASSWORDS (One-way hashing) =====
+def hash_user_password(plain_password):
+    """Hash user passwords using bcrypt (irreversible)"""
+    if not plain_password:
+        return None
+    hashed_bytes = bcrypt.hashpw(plain_password.encode('utf-8'), bcrypt.gensalt())
+    return hashed_bytes.decode('utf-8')
+
+def verify_user_password(plain_password, hashed_password):
+    """Verify user password against hash"""
+    if not plain_password or not hashed_password:
+        return False
+    try:
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except:
+        return False
+
+# ===== BACKWARD COMPATIBILITY =====
+# Keep old function names for existing code
+encrypt_password = encrypt_snmp_password
+decrypt_password = decrypt_snmp_password
     
 def format_speed(speed_bps):
     if speed_bps is None or speed_bps <= 0:

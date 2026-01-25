@@ -1,7 +1,120 @@
--- Database schema for NMS Project
--- Run this script to create all necessary tables
+-- Devices and Interfaces
+CREATE TABLE IF NOT EXISTS devices (
+    device_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    ip_address VARCHAR(45) NOT NULL,
+    hostname VARCHAR(255) NULL,
+    vendor VARCHAR(100) NULL,
+    model VARCHAR(100) NULL,
+    serial_number VARCHAR(100) NULL,
+    os_version VARCHAR(100) NULL,
+    sys_description TEXT NULL,
+    description TEXT NULL,
+    location VARCHAR(255) NULL,
+    status ENUM('up', 'down', 'unknown') DEFAULT 'unknown',
+    uptime BIGINT UNSIGNED NULL,
+    last_polled_time TIMESTAMP NULL,
+    last_reboot_time TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_ip_address (ip_address),
+    INDEX idx_status (status),
+    INDEX idx_vendor (vendor)
+);
 
--- Users and Roles
+CREATE TABLE IF NOT EXISTS interfaces (
+    interface_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    device_id BIGINT UNSIGNED NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    mac_address VARCHAR(17) NULL,
+    admin_status ENUM('up', 'down') DEFAULT 'up',
+    oper_status ENUM('up', 'down', 'unknown') DEFAULT 'unknown',
+    speed BIGINT UNSIGNED NULL,
+    mtu INT UNSIGNED NULL,
+    last_change TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (device_id) REFERENCES devices(device_id) ON DELETE CASCADE,
+    INDEX idx_device_id (device_id),
+    INDEX idx_oper_status (oper_status),
+    INDEX idx_admin_status (admin_status)
+);
+
+-- Device Health Monitoring
+CREATE TABLE IF NOT EXISTS device_health (
+    health_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    device_id BIGINT UNSIGNED NOT NULL,
+    cpu_usage_pct DECIMAL(5,2) NULL,
+    memory_usage_pct DECIMAL(5,2) NULL,
+    disk_usage_pct DECIMAL(5,2) NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (device_id) REFERENCES devices(device_id) ON DELETE CASCADE,
+    INDEX idx_device_timestamp (device_id, timestamp),
+    INDEX idx_timestamp (timestamp)
+);
+
+-- Interface Statistics
+CREATE TABLE IF NOT EXISTS interface_stats (
+    stat_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    interface_id BIGINT UNSIGNED NOT NULL,
+    in_octets BIGINT UNSIGNED DEFAULT 0,
+    out_octets BIGINT UNSIGNED DEFAULT 0,
+    in_packets BIGINT UNSIGNED DEFAULT 0,
+    out_packets BIGINT UNSIGNED DEFAULT 0,
+    in_errors BIGINT UNSIGNED DEFAULT 0,
+    out_errors BIGINT UNSIGNED DEFAULT 0,
+    in_bps DECIMAL(15,2) DEFAULT 0,
+    out_bps DECIMAL(15,2) DEFAULT 0,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (interface_id) REFERENCES interfaces(interface_id) ON DELETE CASCADE,
+    INDEX idx_interface_timestamp (interface_id, timestamp),
+    INDEX idx_timestamp (timestamp)
+);
+
+-- Interface IP Addresses
+CREATE TABLE IF NOT EXISTS interface_ips (
+    ip_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    interface_id BIGINT UNSIGNED NOT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    subnet_mask VARCHAR(45) NULL,
+    ip_version TINYINT DEFAULT 4,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (interface_id) REFERENCES interfaces(interface_id) ON DELETE CASCADE,
+    INDEX idx_interface_id (interface_id),
+    INDEX idx_ip_address (ip_address)
+);
+
+-- ARP Table
+CREATE TABLE IF NOT EXISTS arp_table (
+    arp_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    device_id BIGINT UNSIGNED NOT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    mac_address VARCHAR(17) NOT NULL,
+    interface_name VARCHAR(255) NULL,
+    arp_type ENUM('dynamic', 'static') DEFAULT 'dynamic',
+    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (device_id) REFERENCES devices(device_id) ON DELETE CASCADE,
+    INDEX idx_device_ip (device_id, ip_address),
+    INDEX idx_last_seen (last_seen)
+);
+
+-- Network Neighbors (LLDP/CDP)
+CREATE TABLE IF NOT EXISTS neighbors (
+    neighbor_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    device_id BIGINT UNSIGNED NOT NULL,
+    local_interface VARCHAR(255) NOT NULL,
+    remote_device VARCHAR(255) NULL,
+    remote_interface VARCHAR(255) NULL,
+    protocol ENUM('LLDP', 'CDP', 'Unknown') DEFAULT 'Unknown',
+    capabilities TEXT NULL,
+    platform VARCHAR(255) NULL,
+    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (device_id) REFERENCES devices(device_id) ON DELETE CASCADE,
+    INDEX idx_device_local (device_id, local_interface),
+    INDEX idx_last_seen (last_seen)
+);
 CREATE TABLE IF NOT EXISTS roles (
     role_id INT AUTO_INCREMENT PRIMARY KEY,
     role_name VARCHAR(50) UNIQUE NOT NULL,
@@ -48,10 +161,15 @@ CREATE TABLE IF NOT EXISTS alerts (
     acknowledged_by INT NULL,
     acknowledged_at TIMESTAMP NULL,
     resolved_at TIMESTAMP NULL,
+    is_ignored BOOLEAN DEFAULT FALSE,
+    ignored_by INT NULL,
+    ignored_at TIMESTAMP NULL,
+    ignore_until TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (device_id) REFERENCES devices(device_id),
     FOREIGN KEY (interface_id) REFERENCES interfaces(interface_id),
-    FOREIGN KEY (acknowledged_by) REFERENCES users(user_id)
+    FOREIGN KEY (acknowledged_by) REFERENCES users(user_id),
+    FOREIGN KEY (ignored_by) REFERENCES users(user_id)
 );
 
 -- Notifications

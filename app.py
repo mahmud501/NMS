@@ -1,13 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from modules.reports import generate_availability_report, generate_performance_report, create_pdf_report, save_report_to_db
-from modules.alerts import check_alerts, get_active_alerts, acknowledge_alert, resolve_alert
+from modules.alerts import check_alerts, get_active_alerts, acknowledge_alert, resolve_alert, ignore_alert
 from modules.db import get_db
 from modules.add_devices import add_devices
-from modules.utils import format_time, format_speed
+from modules.utils import format_time, format_speed, hash_user_password, verify_user_password
 from datetime import datetime, timedelta
 import hashlib
-import bcrypt
 import os
 
 app = Flask(__name__)
@@ -134,6 +133,227 @@ def device_ports(device_id):
     page_title= f"{device['ip_address']}-ports"
 
     return render_template("device_interfaces_detail.html",page_title=page_title,interfaces=interfaces,device=device)
+
+@app.route("/devices/device/<int:device_id>/ports/ip")
+@login_required
+def device_ports_ip(device_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM devices WHERE device_id=%s",(device_id,))
+    device = cursor.fetchone()
+    
+    # Get IP addresses from interfaces
+    cursor.execute("""
+        SELECT name as interface_name, description, ipv4_address
+        FROM interfaces
+        WHERE device_id = %s and ipv4_address is not NULL and trim(ipv4_address) <> ''
+        ORDER BY ipv4_address
+    """, (device_id,))
+    ip_addresses = cursor.fetchall()
+    
+    cursor.close()
+    db.close()
+
+    if not device:
+        flash("Device not found!", "warning")
+        return redirect(url_for("dashboard"))
+
+    page_title = f"{device['ip_address']} - IP Addresses"
+    
+    return render_template("device_ports_ip.html", 
+                         page_title=page_title, 
+                         device=device, 
+                         ip_addresses=ip_addresses)
+
+@app.route("/devices/device/<int:device_id>/ports/arp")
+@login_required
+def device_ports_arp(device_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM devices WHERE device_id=%s",(device_id,))
+    device = cursor.fetchone()
+    
+    # Get ARP table entries (this would typically come from SNMP polling)
+    # For now, we'll show a placeholder structure
+    cursor.execute("""
+        SELECT ip_address, mac_address, interface_name, timestamp
+        FROM arp_table
+        WHERE device_id = %s
+        ORDER BY timestamp DESC
+        LIMIT 100
+    """, (device_id,))
+    arp_entries = cursor.fetchall()
+    
+    cursor.close()
+    db.close()
+
+    if not device:
+        flash("Device not found!", "warning")
+        return redirect(url_for("dashboard"))
+
+    page_title = f"{device['ip_address']} - ARP Table"
+    
+    return render_template("device_ports_arp.html", 
+                         page_title=page_title, 
+                         device=device, 
+                         arp_entries=arp_entries)
+
+@app.route("/devices/device/<int:device_id>/ports/neighbors")
+@login_required
+def device_ports_neighbors(device_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM devices WHERE device_id=%s",(device_id,))
+    device = cursor.fetchone()
+    
+    # Get neighbor information (LLDP/CDP neighbors)
+    cursor.execute("""
+        SELECT local_interface, remote_device, remote_interface, protocol, last_seen
+        FROM neighbors
+        WHERE device_id = %s
+        ORDER BY last_seen DESC
+    """, (device_id,))
+    neighbors = cursor.fetchall()
+    
+    cursor.close()
+    db.close()
+
+    if not device:
+        flash("Device not found!", "warning")
+        return redirect(url_for("dashboard"))
+
+    page_title = f"{device['ip_address']} - Neighbors"
+    
+    return render_template("device_ports_neighbors.html", 
+                         page_title=page_title, 
+                         device=device, 
+                         neighbors=neighbors)
+
+@app.route("/devices/device/<int:device_id>/graphs/<graph_type>")
+@login_required
+def device_graphs(device_id, graph_type):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM devices WHERE device_id=%s",(device_id,))
+    device = cursor.fetchone()
+    cursor.close()
+    db.close()
+
+    if not device:
+        flash("Device not found!", "warning")
+        return redirect(url_for("dashboard"))
+
+    page_title = f"{device['ip_address']} - {graph_type.title()} Graph"
+    
+    return render_template("device_graphs.html", 
+                         page_title=page_title, 
+                         device=device, 
+                         graph_type=graph_type)
+
+@app.route("/devices/device/<int:device_id>/health/<health_type>")
+@login_required
+def device_health(device_id, health_type):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM devices WHERE device_id=%s",(device_id,))
+    device = cursor.fetchone()
+    cursor.close()
+    db.close()
+
+    if not device:
+        flash("Device not found!", "warning")
+        return redirect(url_for("dashboard"))
+
+    page_title = f"{device['ip_address']} - {health_type.title()} Health"
+    
+    return render_template("device_health.html", 
+                         page_title=page_title, 
+                         device=device, 
+                         health_type=health_type)
+
+@app.route("/devices/device/<int:device_id>/alerts")
+@login_required
+def device_alerts(device_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM devices WHERE device_id=%s",(device_id,))
+    device = cursor.fetchone()
+    
+    # Get alerts for this device
+    cursor.execute("""
+        SELECT a.*, r.role_name as acknowledged_by_role
+        FROM alerts a
+        LEFT JOIN users u ON a.acknowledged_by = u.user_id
+        LEFT JOIN roles r ON u.role_id = r.role_id
+        WHERE a.device_id = %s
+        ORDER BY a.alert_id DESC
+        LIMIT 100
+    """, (device_id,))
+    alerts = cursor.fetchall()
+    
+    cursor.close()
+    db.close()
+
+    if not device:
+        flash("Device not found!", "warning")
+        return redirect(url_for("dashboard"))
+
+    page_title = f"{device['ip_address']} - Alerts"
+    
+    return render_template("device_alerts.html", 
+                         page_title=page_title, 
+                         device=device, 
+                         alerts=alerts)
+
+@app.route("/devices/device/<int:device_id>/properties")
+@login_required
+def device_properties(device_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM devices WHERE device_id=%s",(device_id,))
+    device = cursor.fetchone()
+    cursor.close()
+    db.close()
+
+    if not device:
+        flash("Device not found!", "warning")
+        return redirect(url_for("dashboard"))
+
+    page_title = f"{device['ip_address']} - Properties"
+    
+    return render_template("device_properties.html", 
+                         page_title=page_title, 
+                         device=device)
+
+@app.route("/devices/device/<int:device_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_device(device_id):
+    if current_user.role_name not in ['admin', 'operator']:
+        flash('Access denied. Insufficient privileges.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM devices WHERE device_id=%s",(device_id,))
+    device = cursor.fetchone()
+    cursor.close()
+    db.close()
+
+    if not device:
+        flash("Device not found!", "warning")
+        return redirect(url_for("dashboard"))
+
+    if request.method == "POST":
+        # Handle device update logic here
+        # For now, just redirect back to properties
+        flash("Device update functionality not yet implemented", "info")
+        return redirect(url_for('device_properties', device_id=device_id))
+
+    page_title = f"Edit {device['ip_address']}"
+    
+    return render_template("edit_device.html", 
+                         page_title=page_title, 
+                         device=device)
 
 @app.route("/devices/add", methods=["GET", "POST"])
 @login_required
@@ -317,17 +537,79 @@ def device_memory(device_id):
 
     return jsonify(data)
 
+@app.route("/api/device/<int:device_id>/cpu")
+@login_required
+def device_cpu(device_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT UNIX_TIMESTAMP(timestamp) * 1000 AS ts,
+            cpu_usage_pct AS cpu_use
+        FROM device_health
+        WHERE device_id=%s AND timestamp >= NOW() - INTERVAL 1 DAY
+        ORDER BY timestamp
+    """,(device_id,))
+    result=cursor.fetchall()
+    data = {
+        "labels": [r["ts"] for r in result],
+        "cpu": [r["cpu_use"] for r in result]
+    }
+
+    return jsonify(data)
+
 @app.route("/alerts")
 @login_required
 def alerts():
     alerts = get_active_alerts()
     return render_template("alerts.html", alerts=alerts)
 
+@app.route("/api/reports/generate/<report_type>", methods=["POST"])
+@login_required
+def api_generate_report(report_type):
+    try:
+        if report_type == "availability":
+            data = generate_availability_report()
+        elif report_type == "performance":
+            data = generate_performance_report()
+        else:
+            return jsonify({"success": False, "error": "Invalid report type"})
+
+        # Create filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{report_type}_report_{timestamp}.pdf"
+        filepath = os.path.join("static", "reports", filename)
+
+        # Ensure reports directory exists
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+
+        # Generate PDF
+        create_pdf_report(report_type, data, filepath)
+
+        # Save to database
+        save_report_to_db(f"{report_type.title()} Report", report_type, {}, current_user.id, filepath)
+
+        return jsonify({"success": True, "file": f"/{filepath}"})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
 @app.route("/api/alerts/acknowledge/<int:alert_id>", methods=["POST"])
 @login_required
 def api_acknowledge_alert(alert_id):
     acknowledge_alert(alert_id, current_user.id)
     return jsonify({"success": True})
+
+@app.route("/api/alerts/resolve/<int:alert_id>", methods=["POST"])
+@login_required
+def api_resolve_alert(alert_id):
+    resolve_alert(alert_id)
+    return jsonify({"success": True})
+
+@app.route("/api/alerts/check", methods=["POST"])
+@login_required
+def api_check_alerts():
+    new_alerts = check_alerts()
+    return jsonify({"success": True, "new_alerts": new_alerts})
 
 @app.route("/reports")
 @login_required
@@ -385,8 +667,8 @@ def add_user():
             flash('All fields are required.', 'error')
             return redirect(url_for('add_user'))
         
-        # Hash password
-        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        # Hash password using bcrypt
+        password_hash = hash_user_password(password)
         
         db = get_db()
         cursor = db.cursor()
@@ -437,7 +719,7 @@ def edit_user(user_id):
         cursor = db.cursor()
         try:
             if new_password:
-                password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                password_hash = hash_user_password(new_password)
                 cursor.execute("""
                     UPDATE users 
                     SET email = %s, role_id = %s, is_active = %s, password_hash = %s
@@ -695,7 +977,7 @@ def login():
         cursor.close()
         db.close()
 
-        if user_data and bcrypt.checkpw(password.encode('utf-8'), user_data['password_hash'].encode('utf-8')):
+        if user_data and verify_user_password(password, user_data['password_hash']):
             user = User(user_data['user_id'], user_data['username'], user_data['email'], user_data['role_id'], user_data['role_name'])
             login_user(user)
 
@@ -720,6 +1002,124 @@ def logout():
     logout_user()
     flash('You have been logged out successfully', 'success')
     return redirect(url_for('login'))
+
+@app.route("/profile")
+@login_required
+def profile():
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT u.*, r.role_name 
+        FROM users u 
+        JOIN roles r ON u.role_id = r.role_id 
+        WHERE u.user_id = %s
+    """, (current_user.id,))
+    user_data = cursor.fetchone()
+    cursor.close()
+    db.close()
+    
+    if not user_data:
+        flash('User not found.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    return render_template("profile.html", user=user_data)
+
+@app.route("/profile/edit", methods=["GET", "POST"])
+@login_required
+def edit_profile():
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT u.*, r.role_name 
+        FROM users u 
+        JOIN roles r ON u.role_id = r.role_id 
+        WHERE u.user_id = %s
+    """, (current_user.id,))
+    user_data = cursor.fetchone()
+    cursor.close()
+    db.close()
+    
+    if not user_data:
+        flash('User not found.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    if request.method == "POST":
+        email = request.form.get('email')
+        # Only allow users to change their own email (not username or role)
+        
+        if not email:
+            flash('Email is required.', 'error')
+            return render_template("edit_profile.html", user=user_data)
+        
+        db = get_db()
+        cursor = db.cursor()
+        try:
+            cursor.execute("""
+                UPDATE users 
+                SET email = %s 
+                WHERE user_id = %s
+            """, (email, current_user.id))
+            db.commit()
+            flash('Profile updated successfully.', 'success')
+            return redirect(url_for('profile'))
+        except Exception as e:
+            db.rollback()
+            flash(f'Error updating profile: {str(e)}', 'error')
+        finally:
+            cursor.close()
+            db.close()
+    
+    return render_template("edit_profile.html", user=user_data)
+
+@app.route("/profile/change-password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    if request.method == "POST":
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if not current_password or not new_password or not confirm_password:
+            flash('All fields are required.', 'error')
+            return render_template("change_password.html")
+        
+        if new_password != confirm_password:
+            flash('New passwords do not match.', 'error')
+            return render_template("change_password.html")
+        
+        # Verify current password
+        db = get_db()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT password_hash FROM users WHERE user_id = %s", (current_user.id,))
+        user_data = cursor.fetchone()
+        cursor.close()
+        db.close()
+        
+        if not user_data or not verify_user_password(current_password, user_data['password_hash']):
+            flash('Current password is incorrect.', 'error')
+            return render_template("change_password.html")
+        
+        # Update password
+        hashed_password = hash_user_password(new_password)
+        db = get_db()
+        cursor = db.cursor()
+        try:
+            cursor.execute("""
+                UPDATE users 
+                SET password_hash = %s 
+                WHERE user_id = %s
+            """, (hashed_password, current_user.id))
+            db.commit()
+            flash('Password changed successfully.', 'success')
+            return redirect(url_for('profile'))
+        except Exception as e:
+            db.rollback()
+            flash(f'Error changing password: {str(e)}', 'error')
+        finally:
+            cursor.close()
+            db.close()
+    
+    return render_template("change_password.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

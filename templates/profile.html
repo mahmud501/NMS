@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}NMS - My Profile{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <h2>My Profile</h2>
+
+    <div class="profile-card">
+        <div class="profile-header">
+            <h3>{{ user.username }}</h3>
+            <span class="role-badge role-{{ user.role_name }}">{{ user.role_name|title }}</span>
+        </div>
+
+        <div class="profile-details">
+            <div class="detail-row">
+                <label>Username:</label>
+                <span>{{ user.username }}</span>
+            </div>
+            <div class="detail-row">
+                <label>Email:</label>
+                <span>{{ user.email }}</span>
+            </div>
+            <div class="detail-row">
+                <label>Role:</label>
+                <span>{{ user.role_name|title }}</span>
+            </div>
+            <div class="detail-row">
+                <label>Account Status:</label>
+                <span class="{% if user.is_active %}status-active{% else %}status-inactive{% endif %}">
+                    {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
+            </div>
+            <div class="detail-row">
+                <label>Last Login:</label>
+                <span>{{ user.last_login.strftime('%Y-%m-%d %H:%M:%S') if user.last_login else 'Never' }}</span>
+            </div>
+            <div class="detail-row">
+                <label>Account Created:</label>
+                <span>{{ user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+            </div>
+        </div>
+
+        <div class="profile-actions">
+            <a href="/profile/edit" class="btn btn-primary">Edit Profile</a>
+            <a href="/profile/change-password" class="btn btn-secondary">Change Password</a>
+        </div>
+    </div>
+
+    <div class="recent-activity">
+        <h3>Recent Activity</h3>
+        <div class="activity-list">
+            <p>Activity tracking coming soon...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

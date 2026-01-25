@@ -28,11 +28,12 @@
         </div>
     </div>
 </div>
+
 <div class="device-detail-nav-1">
     <div class="device-nav-bar-1">
         <ul class="nav-menu-2">
             <li class="nav-item-2">
-                <a href="#"><img src="/static/images/overview-1.png">Overview</a>
+                <a href="/devices/device/{{device.device_id}}"><img src="/static/images/overview-1.png">Overview</a>
             </li>
             <li class="nav-item dropdown">
                 <a href="#">
@@ -60,14 +61,14 @@
             <li class="nav-item dropdown">
                 <a href="#">
                     <img src="/static/images/ethernet-port.png">Ports<img src="/static/images/dropdown-icon-1.svg">
+                    <div class="dropdown-content">
+                        <a href="/devices/device/{{device.device_id}}/ports">Details</a>
+                        <hr>
+                        <a href="/devices/device/{{device.device_id}}/ports/ip">IP Address</a>
+                        <a href="/devices/device/{{device.device_id}}/ports/arp">ARP Table</a>
+                        <a href="/devices/device/{{device.device_id}}/ports/neighbors">Neighbours</a>
+                    </div>
                 </a>
-                <div class="dropdown-content">
-                    <a href="/devices/device/{{device.device_id}}/ports">Details</a>
-                    <hr>
-                    <a href="/devices/device/{{device.device_id}}/ports/ip">IP Address</a>
-                    <a href="/devices/device/{{device.device_id}}/ports/arp">ARP Table</a>
-                    <a href="/devices/device/{{device.device_id}}/ports/neighbors">Neighbours</a>
-                </div>
             </li>
             <li>
                 <a href="/devices/device/{{device.device_id}}/alerts"><img src="/static/images/notification.png">Alerts</a>
@@ -90,139 +91,85 @@
             </li>
         </ul>
     </div>
-    
 </div>
-<div class="device-details-1">
-    <div class="device-detail-info-1">
-        <table class="device-detail-info-table-1">
-            <tr>
-                <th width="35%"></th>
-                <th></th>
-            </tr>
-            {% if device.sys_description|lower!='none'%}
-                <tr>
-                    <td colspan="2">{{device.sys_description}}</td>
-                </tr>
-            {% endif %}
-            {% if device.description|lower!='none'%}
-                <tr>
-                    <td>Description</td>
-                    <td>{{device.description}}</td>
-                </tr>
-            {% endif %}
-             {% if device.model|lower!='none'%}
-                <tr>
-                    <td>Model/Hardware</td>
-                    <td>{{device.model}}</td>
-                </tr>
-            {% endif %}
-             {% if device.vendor|lower!='none'%}
-                <tr>
-                    <td>Vendor</td>
-                    <td>{{device.vendor}}</td>
-                </tr>
-            {% endif %}
-             {% if device.os_version|lower!='none'%}
-                <tr>
-                    <td>Operating System</td>
-                    <td>{{device.os_version}}</td>
-                </tr>
-            {% endif %}
-             {% if device.hostname|lower!='none'%}
-                <tr>
-                    <td>System Name</td>
-                    <td>{{device.hostname}}</td>
-                </tr>
-            {% endif %}
-             {% if device.ip_address|lower!='none'%}
-                <tr>
-                    <td>Cached IP/IP Address</td>
-                    <td>{{device.ip_address}}</td>
-                </tr>
-            {% endif %}
-             {% if device.location|lower!='none'%}
-                <tr>
-                    <td>Location</td>
-                    <td>{{device.location}}</td>
-                </tr>
-            {% endif %}
-             {% if device.serial_number|lower!='none'%}
-                <tr>
-                    <td>Serial</td>
-                    <td>{{device.serial_number}}</td>
-                </tr>
-            {% endif %}
-             {% if device.uptime|lower!='none'%}
-                <tr>
-                    <td>Uptime</td>
-                    <td>{{device.formatted_uptime}}</td>
-                </tr>
-            {% endif %}
-            {% if device.last_reboot_time|lower != 'none' %}
-                <tr>
-                    <td>Last Reboot</td>
-                    <td>{{device.last_reboot_time}}</td>
-                </tr>
-            {% endif %}
-            {% if device.last_polled_time|lower != 'none' %}
-                <tr>
-                    <td>Last Polled</td>
-                    <td>{{device.last_polled_time}}</td>
-                </tr>
-            {% endif %}
-        </table>
-    </div>
-    <div class="device-detail-graph-1">
-        <p>Throughput</p>
-        <div class="device-detail-graph-1">
-            <canvas id="deviceThroughput"></canvas>
+
+<div class="device-ports-container">
+    <h3>Network Neighbors</h3>
+    
+    <div class="ports-summary">
+        <div class="port-stat">
+            <span class="port-count">{{neighbors|length}}</span>
+            <span class="port-label">Neighbors</span>
+        </div>
+        <div class="port-stat">
+            <span class="port-count">{{neighbors|selectattr('protocol', 'equalto', 'LLDP')|list|length}}</span>
+            <span class="port-label">LLDP</span>
+        </div>
+        <div class="port-stat">
+            <span class="port-count">{{neighbors|selectattr('protocol', 'equalto', 'CDP')|list|length}}</span>
+            <span class="port-label">CDP</span>
         </div>
     </div>
 
-</div>
-<div>
-    <div class="device-interface-summary-1">
-        <table class="device-interface-summary-table-1">
-            <tr>
-                <th colspan="4">
-                    <a href="#"><img src="/static/images/ethernet-port.png"> Ports</a>
-                </th>
-            </tr>
-            <tr style="text-align: center;">
-                <td>
-                    <img src="/static/images/ethernet-port.png"> {{interfaces|length}}
-                </td>
-                <td>
-                    <img src="/static/images/green tick.png"> 
-                    {{interfaces | map(attribute="oper_status") | map("lower") | select("equalto","up") | list| length}}
-                </td>
-                <td>
-                    <img src="/static/images/red- minus.png"> 
-                    {{interfaces | selectattr("oper_status", "==", "down") | selectattr("admin_status", "==", "up") | list | length}}
-                </td>
-                <td>
-                    <img src="/static/images/gray minus.png"> 
-                    {{interfaces | map(attribute="admin_status") | map("lower") | select("equalto","down") | list| length}}
-                </td>
-            </tr>
-            <tr>
-                <td colspan="4">
-                    {% for interface in interfaces %}
-                        <a href="#" class="interface-link 
-                            {% if interface.oper_status == 'up' %}up
-                            {% elif interface.admin_status == 'down' %}admin-down
-                            {% elif interface.oper_status == 'down' %}oper-down
-                            {% else %}default{% endif %}">
-                            {{ interface.name }},
-                         </a>
-                    {% endfor %}
-                </td>
-            </tr>
+    <div class="neighbors-table-container">
+        <table class="neighbors-table">
+            <thead>
+                <tr>
+                    <th>Local Interface</th>
+                    <th>Remote Device</th>
+                    <th>Remote Interface</th>
+                    <th>Protocol</th>
+                    <th>Last Seen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for neighbor in neighbors %}
+                <tr>
+                    <td>
+                        <strong>{{neighbor.local_interface}}</strong>
+                    </td>
+                    <td>
+                        {% if neighbor.remote_device %}
+                            <code>{{neighbor.remote_device}}</code>
+                        {% else %}
+                            --
+                        {% endif %}
+                    </td>
+                    <td>{{neighbor.remote_interface or '--'}}</td>
+                    <td>
+                        <span class="protocol-badge {{neighbor.protocol|lower}}">
+                            {{neighbor.protocol or 'Unknown'}}
+                        </span>
+                    </td>
+                    <td>{{neighbor.last_seen or '--'}}</td>
+                </tr>
+                {% endfor %}
+                {% if not neighbors %}
+                <tr>
+                    <td colspan="5" style="text-align: center;">
+                        No neighbor information found. Neighbor discovery protocols (LLDP/CDP) may not be enabled or configured on this device.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
         </table>
     </div>
+
+    {% if not neighbors %}
+    <div class="info-message">
+        <h4>Neighbor Discovery Information</h4>
+        <p>Network neighbors are discovered using protocols like:</p>
+        <ul>
+            <li><strong>LLDP (Link Layer Discovery Protocol):</strong> Industry standard protocol for neighbor discovery</li>
+            <li><strong>CDP (Cisco Discovery Protocol):</strong> Cisco proprietary protocol for neighbor discovery</li>
+        </ul>
+        <p><strong>Note:</strong> Neighbor discovery may need to be enabled in the device configuration and polling settings.</p>
+    </div>
+    {% endif %}
 </div>
 
 <script>
+// Memory chart for brief
 fetch("/api/device/{{ device.device_id }}/memory")
   .then(res => res.json())
   .then(data => {
@@ -235,7 +182,7 @@ fetch("/api/device/{{ device.device_id }}/memory")
         datasets: [{
           data: data.memory,
           borderWidth: 2,
-          fill: true,               
+          fill: true,
           tension: 0.3,
           pointRadius: 0,
           pointHoverRadius: 0,
@@ -245,16 +192,13 @@ fetch("/api/device/{{ device.device_id }}/memory")
       options: {
         responsive: true,
         maintainAspectRatio: false,
-
         events: [],
         hover: { mode: null },
         interaction: { mode: null },
-
         plugins: {
           legend: { display: false },
           tooltip: { enabled: false }
         },
-
         scales: {
           x: {
             type: "time",
@@ -272,9 +216,7 @@ fetch("/api/device/{{ device.device_id }}/memory")
             title: { display: false }
           }
         },
-
         animation: false,
-
         elements: {
           line: {
             borderJoinStyle: 'round'
@@ -284,6 +226,7 @@ fetch("/api/device/{{ device.device_id }}/memory")
     });
 });
 
+// CPU chart for brief
 fetch("/api/device/{{ device.device_id }}/cpu")
   .then(res => res.json())
   .then(data => {
@@ -296,7 +239,7 @@ fetch("/api/device/{{ device.device_id }}/cpu")
         datasets: [{
           data: data.cpu,
           borderWidth: 2,
-          fill: true,               
+          fill: true,
           tension: 0.3,
           pointRadius: 0,
           pointHoverRadius: 0,
@@ -306,16 +249,13 @@ fetch("/api/device/{{ device.device_id }}/cpu")
       options: {
         responsive: true,
         maintainAspectRatio: false,
-
         events: [],
         hover: { mode: null },
         interaction: { mode: null },
-
         plugins: {
           legend: { display: false },
           tooltip: { enabled: false }
         },
-
         scales: {
           x: {
             type: "time",
@@ -333,9 +273,7 @@ fetch("/api/device/{{ device.device_id }}/cpu")
             title: { display: false }
           }
         },
-
         animation: false,
-
         elements: {
           line: {
             borderJoinStyle: 'round'
@@ -344,71 +282,6 @@ fetch("/api/device/{{ device.device_id }}/cpu")
       }
     });
 });
-
-fetch("/api/device/{{ device.device_id }}/throughput")
-.then(res => res.json())
-.then(data => {
-
-  const ctx = document.getElementById("deviceThroughput").getContext("2d");
-
-  new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: data.labels,
-      datasets: [
-        {
-          label: "In",
-          data: data.in,
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 0
-        },
-        {
-          label: "Out",
-          data: data.out,
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 0
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        mode: "index",
-        intersect: false
-      },
-      scales: {
-        x: {
-          type: "time",
-          time: {
-            unit: "hour",
-            stepSize: 3
-            
-          }
-        },
-        y: {
-          ticks: {
-                callback: function(value) {
-                const abs = Math.abs(value);
-                
-                if (abs >= 1e9) {
-                    return (value / 1e9).toFixed(2) + ' Gbps';
-                }
-                if (abs >= 1e6) {
-                    return (value / 1e6).toFixed(1) + ' Mbps';
-                }
-                return (value / 1e3).toFixed(0) + ' kbps';
-                }
-            }
-        }
-      }
-    }
-  });
-
-});
 </script>
+
 {% endblock %}
