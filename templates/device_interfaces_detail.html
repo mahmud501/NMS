@@ -120,12 +120,11 @@
             <thead>
                 <tr>
                     <th>Interface</th>
-                    <th>Description</th>
+                    <th>Traffic</th>
                     <th>Admin Status</th>
                     <th>Oper Status</th>
                     <th>Speed</th>
                     <th>MTU</th>
-                    <th>Last Change</th>
                 </tr>
             </thead>
             <tbody>
@@ -137,11 +136,31 @@
                     {% else %}default{% endif %}">
                     <td>
                         <strong>{{interface.name}}</strong>
+                        {% if interface.description %}
+                        <br><small style="color: #666;">{{interface.description}}</small>
+                        {% endif %}
+                        {% if interface.ipv4_address %}
+                        <br><small style="color: #007bff;">IP: {{interface.ipv4_address}}</small>
+                        {% endif %}
                         {% if interface.mac_address %}
                         <br><small>MAC: {{interface.mac_address}}</small>
                         {% endif %}
                     </td>
-                    <td>{{interface.description or 'No description'}}</td>
+                    <td class="traffic-cell">
+                        <div class="traffic-graph-container">
+                            <canvas id="trafficChart{{interface.interface_id}}" width="150" height="50"></canvas>
+                        </div>
+                        <div class="traffic-stats">
+                            <div class="traffic-stat">
+                                <span class="traffic-label">In:</span>
+                                <span class="traffic-value" id="inBps{{interface.interface_id}}">--</span>
+                            </div>
+                            <div class="traffic-stat">
+                                <span class="traffic-label">Out:</span>
+                                <span class="traffic-value" id="outBps{{interface.interface_id}}">--</span>
+                            </div>
+                        </div>
+                    </td>
                     <td>
                         <span class="status-badge {{interface.admin_status|lower}}">
                             {{interface.admin_status|upper}}
@@ -160,22 +179,24 @@
                         {% endif %}
                     </td>
                     <td>{{interface.mtu or '--'}}</td>
-                    <td>
-                        {% if interface.last_change %}
-                            {{interface.last_change}}
-                        {% else %}
-                            --
-                        {% endif %}
-                    </td>
                 </tr>
                 {% endfor %}
                 {% if not interfaces %}
                 <tr>
-                    <td colspan="7" style="text-align: center;">No interfaces found for this device</td>
+                    <td colspan="6" style="text-align: center;">No interfaces found for this device</td>
                 </tr>
                 {% endif %}
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- Traffic Graph Modal -->
+<div id="trafficModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3 id="modalTitle">Interface Traffic</h3>
+        <canvas id="modalTrafficChart" width="600" height="300"></canvas>
     </div>
 </div>
 
@@ -292,6 +313,233 @@ fetch("/api/device/{{ device.device_id }}/cpu")
         }
       }
     });
+});
+
+// Load traffic data for each interface
+{% for interface in interfaces %}
+fetch("/api/interface/{{interface.interface_id}}/traffic?time=1d")
+  .then(res => res.json())
+  .then(data => {
+    // Update BPS values
+    const inBpsElement = document.getElementById("inBps{{interface.interface_id}}");
+    const outBpsElement = document.getElementById("outBps{{interface.interface_id}}");
+    
+    if (inBpsElement && data.latest_in_bps !== undefined) {
+      inBpsElement.textContent = formatTraffic(data.latest_in_bps);
+    }
+    if (outBpsElement && data.latest_out_bps !== undefined) {
+      outBpsElement.textContent = formatTraffic(data.latest_out_bps);
+    }
+    
+    // Create mini traffic chart
+    const ctx = document.getElementById("trafficChart{{interface.interface_id}}");
+    if (ctx && data.labels.length > 0) {
+      const chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: data.labels,
+          datasets: [
+            {
+              label: "In",
+              data: data.in_bps,
+              borderWidth: 1,
+              fill: false,
+              tension: 0.4,
+              pointRadius: 0,
+              borderColor: 'rgba(75, 192, 192, 1)',
+              backgroundColor: 'rgba(75, 192, 192, 0.1)'
+            },
+            {
+              label: "Out",
+              data: data.out_bps.map(val => -val), // Negative for outgoing
+              borderWidth: 1,
+              fill: false,
+              tension: 0.4,
+              pointRadius: 0,
+              borderColor: 'rgba(255, 99, 132, 1)',
+              backgroundColor: 'rgba(255, 99, 132, 0.1)'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false }
+          },
+          scales: {
+            x: {
+              type: "time",
+              display: false
+            },
+            y: {
+              display: false,
+              ticks: {
+                callback: function(value) {
+                  return Math.abs(value);
+                }
+              }
+            }
+          },
+          elements: {
+            point: { radius: 0 }
+          },
+          animation: false
+        }
+      });
+      
+      // Add hover functionality
+      ctx.addEventListener('mouseenter', function() {
+        showTrafficModal("{{interface.name}}", data);
+      });
+      
+      ctx.addEventListener('mouseleave', function() {
+        hideTrafficModal();
+      });
+    }
+  })
+  .catch(error => {
+    console.log("No traffic data for interface {{interface.interface_id}}");
+  });
+{% endfor %}
+
+// Helper function to format traffic values
+function formatTraffic(bps) {
+  if (bps === 0 || bps === null || bps === undefined) return '0 bps';
+  
+  const absBps = Math.abs(bps);
+  if (absBps >= 1e9) {
+    return (bps / 1e9).toFixed(2) + ' Gbps';
+  } else if (absBps >= 1e6) {
+    return (bps / 1e6).toFixed(1) + ' Mbps';
+  } else if (absBps >= 1e3) {
+    return (bps / 1e3).toFixed(0) + ' kbps';
+  } else {
+    return bps.toFixed(0) + ' bps';
+  }
+}
+
+// Modal functionality
+let modalChart = null;
+
+function showTrafficModal(interfaceName, data) {
+  const modal = document.getElementById('trafficModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalCanvas = document.getElementById('modalTrafficChart');
+  
+  modalTitle.textContent = `Traffic for ${interfaceName}`;
+  modal.style.display = 'block';
+  
+  // Destroy previous chart if it exists
+  if (modalChart) {
+    modalChart.destroy();
+  }
+  
+  // Create enlarged chart
+  const ctx = modalCanvas.getContext('2d');
+  modalChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: data.labels,
+      datasets: [
+        {
+          label: "Inbound (bps)",
+          data: data.in_bps,
+          borderWidth: 2,
+          fill: false,
+          tension: 0.4,
+          pointRadius: 2,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: 'rgba(75, 192, 192, 0.1)'
+        },
+        {
+          label: "Outbound (bps)",
+          data: data.out_bps,
+          borderWidth: 2,
+          fill: false,
+          tension: 0.4,
+          pointRadius: 2,
+          borderColor: 'rgba(255, 99, 132, 1)',
+          backgroundColor: 'rgba(255, 99, 132, 0.1)'
+        }
+      ]
+    },
+    options: {
+      responsive: false,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top' },
+        tooltip: { 
+          enabled: true,
+          callbacks: {
+            label: function(context) {
+              return context.dataset.label + ': ' + formatTraffic(context.parsed.y);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: "time",
+          display: true,
+          title: {
+            display: true,
+            text: 'Time'
+          }
+        },
+        y: {
+          display: true,
+          title: {
+            display: true,
+            text: 'Bits per Second'
+          },
+          ticks: {
+            callback: function(value) {
+              return formatTraffic(value);
+            }
+          }
+        }
+      },
+      elements: {
+        point: { radius: 2 }
+      },
+      animation: false
+    }
+  });
+}
+
+function hideTrafficModal() {
+  const modal = document.getElementById('trafficModal');
+  modal.style.display = 'none';
+  if (modalChart) {
+    modalChart.destroy();
+    modalChart = null;
+  }
+}
+
+// Modal event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('trafficModal');
+  const closeBtn = document.getElementsByClassName('close')[0];
+  
+  closeBtn.onclick = function() {
+    modal.style.display = 'none';
+    if (modalChart) {
+      modalChart.destroy();
+      modalChart = null;
+    }
+  }
+  
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = 'none';
+      if (modalChart) {
+        modalChart.destroy();
+        modalChart = null;
+      }
+    }
+  }
 });
 </script>
 

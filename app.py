@@ -632,6 +632,48 @@ def device_availability(device_id):
 
     return jsonify(data)
 
+@app.route("/api/interface/<int:interface_id>/traffic")
+@login_required
+def interface_traffic(interface_id):
+    # Get time frame from query parameters, default to 1 day
+    time_frame = request.args.get('time', '1d')
+    
+    # Convert time frame to MySQL INTERVAL
+    time_intervals = {
+        '1h': 'INTERVAL 1 HOUR',
+        '6h': 'INTERVAL 6 HOUR', 
+        '1d': 'INTERVAL 1 DAY',
+        '7d': 'INTERVAL 7 DAY',
+        '30d': 'INTERVAL 30 DAY'
+    }
+    
+    interval = time_intervals.get(time_frame, 'INTERVAL 1 DAY')
+    
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute(f"""
+        SELECT UNIX_TIMESTAMP(timestamp) * 1000 AS ts,
+            in_bps, out_bps
+        FROM interface_stats
+        WHERE interface_id=%s AND timestamp >= NOW() - {interval}
+        ORDER BY timestamp
+    """,(interface_id,))
+    result=cursor.fetchall()
+    
+    # Get latest values for display
+    latest_in_bps = result[-1]['in_bps'] if result else 0
+    latest_out_bps = result[-1]['out_bps'] if result else 0
+    
+    data = {
+        "labels": [r["ts"] for r in result],
+        "in_bps": [r["in_bps"] for r in result],
+        "out_bps": [-r["out_bps"] for r in result],
+        "latest_in_bps": latest_in_bps,
+        "latest_out_bps": latest_out_bps
+    }
+
+    return jsonify(data)
+
 @app.route("/alerts")
 @login_required
 def alerts():
