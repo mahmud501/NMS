@@ -390,11 +390,17 @@ fetch("/api/interface/{{interface.interface_id}}/traffic?time=1d")
       });
       
       // Add hover functionality
-      ctx.addEventListener('mouseenter', function() {
-        showTrafficModal("{{interface.name}}", data);
+      let modalOpen = false;
+
+      ctx.addEventListener('mouseover', function() {
+        if (!modalOpen) {
+            modalOpen = true;
+            showTrafficModal("{{interface.name}}", data);
+        }
       });
       
-      ctx.addEventListener('mouseleave', function() {
+      ctx.addEventListener('mouseout', function() {
+        modalOpen = false;
         hideTrafficModal();
       });
     }
