@@ -105,9 +105,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="delete-threshold-form" method="POST" style="display: inline;">
-                    <button type="submit" class="btn btn-danger">Delete Threshold</button>
-                </form>
+                <button type="button" id="confirm-delete-btn" class="btn btn-danger">Delete Threshold</button>
             </div>
         </div>
     </div>
@@ -115,20 +113,74 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle delete threshold buttons
-    document.querySelectorAll('.delete-threshold-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const thresholdId = this.dataset.thresholdId;
-            const device = this.dataset.device;
-            const metric = this.dataset.metric.replace('_', ' ');
+    let selectedThresholdId = null;
+    
+    // Handle delete threshold buttons - using event delegation
+    document.addEventListener('click', function(e) {
+        // Check if clicked element is a delete button
+        if (e.target.classList.contains('delete-threshold-btn')) {
+            e.preventDefault();
+            selectedThresholdId = e.target.dataset.thresholdId;
+            const device = e.target.dataset.device;
+            const metric = e.target.dataset.metric.replace(/_/g, ' ');
 
+            console.log('Delete clicked for threshold:', selectedThresholdId);
             document.getElementById('delete-device').textContent = device;
             document.getElementById('delete-metric').textContent = metric;
-            document.getElementById('delete-threshold-form').action = `/alerts/thresholds/${thresholdId}/delete`;
 
             const modal = new bootstrap.Modal(document.getElementById('deleteThresholdModal'));
             modal.show();
-        });
+        }
+        
+        // Check if clicked element is the confirm delete button
+        if (e.target.id === 'confirm-delete-btn') {
+            e.preventDefault();
+            console.log('Confirm delete clicked, selectedThresholdId:', selectedThresholdId);
+            
+            if (!selectedThresholdId) {
+                alert('Error: No threshold selected');
+                return;
+            }
+            
+            const confirmBtn = e.target;
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Deleting...';
+            
+            const url = `/alerts/thresholds/${selectedThresholdId}/delete`;
+            console.log('Fetch URL:', url);
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok && response.status !== 200) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    console.log('Delete success, reloading page');
+                    setTimeout(() => window.location.reload(), 500);
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to delete threshold'));
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = 'Delete Threshold';
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                alert('Error deleting threshold: ' + error.message);
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Delete Threshold';
+            });
+        }
     });
 });
 </script>

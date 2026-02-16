@@ -37,7 +37,9 @@ def poll_interfaces():
         if_data = snmp_walk(ip, if_table_oid, device)
         ip_int_table_oid = "1.3.6.1.2.1.4.20.1.2"
         ip_data = snmp_walk(ip, ip_int_table_oid, device)
-        ifX_table_oid = "1.3.6.1.2.1.31.1.1.1"
+        ip_netmask_table_oid = "1.3.6.1.2.1.4.20.1.3"
+        ip_netmask_data = snmp_walk(ip, ip_netmask_table_oid, device)
+        ifX_table_oid = "1.3.6.1.2.1.31.1.1.1" #interface description
         ifX_data = snmp_walk(ip, ifX_table_oid, device)
 
         interface_ips = {}
@@ -45,6 +47,14 @@ def poll_interfaces():
             parts = ip_oid.split('.')
             ipv4_address = ".".join(parts[-4:])
             interface_ips[ip_index] = ipv4_address
+
+        interface_ip_mask = {}
+        for ip_oid, netmask in ip_netmask_data.items():
+            parts = ip_oid.split('.')
+            ipv4_address = ".".join(parts[-4:])
+            netmask = netmask.encode("latin1")
+            netmask = '.'.join(str(b) for b in netmask)
+            interface_ip_mask[ipv4_address]= netmask
 
         if not if_data:
             print(f"No interface data for device {ip}")
@@ -80,9 +90,10 @@ def poll_interfaces():
             if mac_address and len(mac_address) == 14:
                 mac_address = ':'.join(mac_address[i:i+2] for i in range(2, 14, 2))
             ipv4_address = interface_ips.get(if_index, "")
+            netmask = interface_ip_mask.get(ipv4_address,"")
 
             # Check if interface exists
-            cursor.execute("SELECT interface_id, name, description, admin_status, oper_status, speed, mtu, mac_address, ipv4_address FROM interfaces WHERE device_id = %s AND if_index = %s", (device_id, if_index))
+            cursor.execute("SELECT interface_id, name, description, admin_status, oper_status, speed, mtu, mac_address, ipv4_address, subnet_mask FROM interfaces WHERE device_id = %s AND if_index = %s", (device_id, if_index))
             existing = cursor.fetchone()
 
             if existing:
@@ -94,20 +105,21 @@ def poll_interfaces():
                     existing['speed'] != speed or
                     existing['mtu'] != mtu or
                     existing['mac_address'] != mac_address or
-                    existing['ipv4_address'] != ipv4_address):
+                    existing['ipv4_address'] != ipv4_address or
+                    existing['subnet_mask'] != netmask) :
                     cursor.execute("""
                         UPDATE interfaces
-                        SET name = %s, description = %s, admin_status = %s, oper_status = %s, speed = %s, mtu = %s, mac_address = %s, ipv4_address = %s, updated_at = NOW()
+                        SET name = %s, description = %s, admin_status = %s, oper_status = %s, speed = %s, mtu = %s, mac_address = %s, ipv4_address = %s, subnet_mask = %s, updated_at = NOW()
                         WHERE interface_id = %s
-                    """, (name, description, admin_status, oper_status, speed, mtu, mac_address, ipv4_address, existing['interface_id']))
+                    """, (name, description, admin_status, oper_status, speed, mtu, mac_address, ipv4_address, netmask, existing['interface_id']))
             else:
                 # Insert new interface
                 cursor.execute("""
                     INSERT INTO interfaces (
-                        device_id, if_index, name, description, mac_address, ipv4_address, speed, mtu, admin_status, oper_status, created_at
+                        device_id, if_index, name, description, mac_address, ipv4_address, subnet_mask, speed, mtu, admin_status, oper_status, created_at
                     )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-                """, (device_id, if_index, name, description, mac_address, ipv4_address, speed, mtu, admin_status, oper_status))
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                """, (device_id, if_index, name, description, mac_address, ipv4_address, netmask, speed, mtu, admin_status, oper_status))
 
             # Get interface_id
             if existing:

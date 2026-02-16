@@ -26,7 +26,7 @@
                         <a href="/devices/device/{{ interface.device_id }}">{{ interface.ip_address }}</a>
                     </td>
                     <td>
-                        <a class="interface-status {{interface.oper_status}}-{{interface.admin_status}}"href="">
+                        <a class="interface-status {{interface.oper_status}}-{{interface.admin_status}}" href="/devices/device/{{interface.device_id}}/interface/{{interface.interface_id}}">
                             {{ interface.name}}
                         </a>
                         <p>{{ interface.description }}</p>

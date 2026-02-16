@@ -1555,7 +1555,192 @@ a:hover {
     text-decoration: none;
 }
 
-#modalTitle {
-    margin-top: 0;
+/* Interface Link Styles */
+.interface-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    padding: 8px 0;
+    transition: all 0.2s ease;
+}
+
+.interface-link:hover {
+    color: #007bff;
+}
+
+.interface-link strong {
+    transition: color 0.2s ease;
+}
+
+.interface-row:hover {
+    background-color: #f0f7ff;
+}
+
+.interface-row:hover .interface-link strong {
+    color: #007bff;
+}
+
+/* Interface Detail Page Styles */
+.interface-detail-container {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.interface-header {
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.interface-header h2 {
+    margin: 0 0 15px 0;
     color: #333;
+    font-size: 24px;
+}
+
+.interface-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border-left: 3px solid #007bff;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #666;
+    font-size: 12px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    color: #333;
+    font-size: 14px;
+    word-break: break-word;
+}
+
+.time-frame-selector {
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.time-frame-selector label {
+    font-weight: 600;
+    color: #333;
+}
+
+.time-frame-selector select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    background: white;
+}
+
+.time-frame-selector select:hover {
+    border-color: #999;
+}
+
+/* Traffic Statistics Container */
+.traffic-stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.traffic-stat-box {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.traffic-stat-box h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    opacity: 0.9;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 13px;
+}
+
+.traffic-value {
+    font-weight: 600;
+    font-size: 14px;
+    color: #fff;
+}
+
+/* Traffic Graphs Container */
+.traffic-graphs-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin: 30px 0;
+}
+
+.graph-container {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.graph-container h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 16px;
+}
+
+.graph-container canvas {
+    max-height: 300px;
+}
+
+/* Clickable Row Styles */
+.interface-row.clickable:hover {
+    background-color: #f0f7ff !important;
+    transform: translateX(5px);
+    transition: all 0.2s ease;
+}
+
+/* Back Button */
+.back-button {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.back-button a {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+.back-button a:hover {
+    background: #0056b3;
 }

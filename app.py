@@ -45,6 +45,7 @@ def load_user(user_id):
     """, (user_id,))
     row = cursor.fetchone()
     cursor.close()
+    db.close()
 
     if row:
         return User(row["user_id"], row["username"], row["email"], row["role_id"], row["role_name"])
@@ -134,6 +135,34 @@ def device_ports(device_id):
 
     return render_template("device_interfaces_detail.html",page_title=page_title,interfaces=interfaces,device=device)
 
+@app.route("/devices/device/<int:device_id>/interface/<int:interface_id>")
+@login_required
+def interface_detail(device_id, interface_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    
+    # Get device info
+    cursor.execute("SELECT * FROM devices WHERE device_id=%s",(device_id,))
+    device = cursor.fetchone()
+    
+    # Get interface info
+    cursor.execute("SELECT * FROM interfaces WHERE interface_id=%s AND device_id=%s",(interface_id, device_id))
+    interface = cursor.fetchone()
+    
+    cursor.close()
+    db.close()
+
+    if not device or not interface:
+        flash("Device or interface not found!", "warning")
+        return redirect(url_for("dashboard"))
+
+    page_title = f"{device['ip_address']} - {interface['name']}"
+    
+    return render_template("interface_detail.html",
+                         page_title=page_title,
+                         device=device,
+                         interface=interface)
+
 @app.route("/devices/device/<int:device_id>/ports/ip")
 @login_required
 def device_ports_ip(device_id):
@@ -144,7 +173,7 @@ def device_ports_ip(device_id):
     
     # Get IP addresses from interfaces
     cursor.execute("""
-        SELECT name as interface_name, description, ipv4_address
+        SELECT name as interface_name, description, ipv4_address, subnet_mask
         FROM interfaces
         WHERE device_id = %s and ipv4_address is not NULL and trim(ipv4_address) <> ''
         ORDER BY ipv4_address
@@ -722,6 +751,14 @@ def api_resolve_alert(alert_id):
     resolve_alert(alert_id)
     return jsonify({"success": True})
 
+@app.route("/api/alerts/ignore/<int:alert_id>", methods=["POST"])
+@login_required
+def api_ignore_alert(alert_id):
+    data = request.get_json()
+    ignore_duration = data.get('ignore_duration_minutes') if data else None
+    ignore_alert(alert_id, current_user.id, ignore_duration)
+    return jsonify({"success": True})
+
 @app.route("/api/alerts/check", methods=["POST"])
 @login_required
 def api_check_alerts():
@@ -1046,23 +1083,21 @@ def edit_alert_threshold(threshold_id):
 @login_required
 def delete_alert_threshold(threshold_id):
     if current_user.role_name not in ['admin', 'operator']:
-        flash('Access denied. Admin or Operator privileges required.', 'error')
-        return redirect(url_for('dashboard'))
+        return jsonify({'success': False, 'error': 'Access denied'}), 403
     
     db = get_db()
     cursor = db.cursor()
     try:
         cursor.execute("DELETE FROM alert_thresholds WHERE threshold_id = %s", (threshold_id,))
         db.commit()
-        flash('Alert threshold deleted successfully.', 'success')
+        return jsonify({'success': True, 'message': 'Alert threshold deleted successfully'}), 200
     except Exception as e:
         db.rollback()
-        flash('Error deleting alert threshold.', 'error')
+        print(f"Error deleting threshold {threshold_id}: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 400
     finally:
         cursor.close()
         db.close()
-    
-    return redirect(url_for('alert_thresholds'))
 
 @app.route("/alerts/check", methods=["POST"])
 @login_required

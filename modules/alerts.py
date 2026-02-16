@@ -8,25 +8,108 @@ from modules.notifications import send_alert_notifications
 def check_alerts():
     """
     Check all active alert thresholds and generate alerts if conditions are met.
+    Also auto-resolve alerts when conditions return to normal.
     """
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
-    # Get all active thresholds
+    # First, check for alerts that should be resolved (conditions back to normal)
+    cursor.execute("""
+        SELECT a.alert_id, a.device_id, a.interface_id, a.alert_type, t.warning_threshold, t.critical_threshold
+        FROM alerts a
+        LEFT JOIN alert_thresholds t ON 
+            a.device_id = t.device_id AND 
+            COALESCE(a.interface_id, 0) = COALESCE(t.interface_id, 0) AND 
+            a.alert_type = t.metric_type
+        WHERE a.resolved_at IS NULL
+        AND t.device_id IS NOT NULL
+    """)
+    unresolved_alerts = cursor.fetchall()
+
+    for alert in unresolved_alerts:
+        alert_id = alert['alert_id']
+        device_id = alert['device_id']
+        interface_id = alert['interface_id']
+        metric_type = alert['alert_type']
+        warning_threshold = alert['warning_threshold']
+        critical_threshold = alert['critical_threshold']
+
+        # Get current value
+        if metric_type == 'cpu':
+            cursor.execute("""
+                SELECT cpu_usage_pct as value
+                FROM device_health
+                WHERE device_id = %s
+                ORDER BY timestamp DESC
+                LIMIT 1
+            """, (device_id,))
+        elif metric_type == 'memory':
+            cursor.execute("""
+                SELECT memory_usage_pct as value
+                FROM device_health
+                WHERE device_id = %s
+                ORDER BY timestamp DESC
+                LIMIT 1
+            """, (device_id,))
+        elif metric_type == 'disk':
+            cursor.execute("""
+                SELECT disk_usage_pct as value
+                FROM device_health
+                WHERE device_id = %s
+                ORDER BY timestamp DESC
+                LIMIT 1
+            """, (device_id,))
+        elif metric_type == 'availability':
+            cursor.execute("""
+                SELECT CASE WHEN status = 'up' THEN 100 ELSE 0 END as value
+                FROM device_availability
+                WHERE device_id = %s
+                ORDER BY timestamp DESC
+                LIMIT 1
+            """, (device_id,))
+        elif metric_type == 'interface_traffic':
+            cursor.execute("""
+                SELECT (in_bps + out_bps) / 1000000 as value
+                FROM interface_stats
+                WHERE interface_id = %s
+                ORDER BY timestamp DESC
+                LIMIT 1
+            """, (interface_id,))
+
+        result = cursor.fetchone()
+        if result and result['value'] is not None:
+            current_value = float(result['value'])
+            
+            # Check if condition has improved below all thresholds
+            # Alert should be resolved if:
+            # 1. If there's a critical threshold, value must be below it
+            # 2. If there's a warning threshold, value must be below it
+            # 3. At least one threshold must exist
+            should_resolve = False
+            
+            if critical_threshold is not None:
+                if warning_threshold is not None:
+                    # Both thresholds exist - must be below BOTH
+                    should_resolve = current_value < critical_threshold and current_value < warning_threshold
+                else:
+                    # Only critical exists - must be below it
+                    should_resolve = current_value < critical_threshold
+            elif warning_threshold is not None:
+                # Only warning exists - must be below it
+                should_resolve = current_value < warning_threshold
+            
+            if should_resolve:
+                # Auto-resolve the alert
+                resolve_alert(alert_id)
+                print(f"Auto-resolved alert {alert_id} - condition returned to normal (value: {current_value})")
+
+    # Get all active thresholds (excluding ignored alerts with future ignore_until times)
     cursor.execute("""
         SELECT t.*, d.ip_address, d.hostname, i.name as interface_name
         FROM alert_thresholds t
         JOIN devices d ON t.device_id = d.device_id
         LEFT JOIN interfaces i ON t.interface_id = i.interface_id
         WHERE t.is_active = TRUE
-        AND NOT EXISTS (
-            SELECT 1 FROM alerts a
-            WHERE a.device_id = t.device_id
-            AND (a.interface_id = t.interface_id OR (a.interface_id IS NULL AND t.interface_id IS NULL))
-            AND a.alert_type = t.metric_type
-            AND a.is_ignored = TRUE
-            AND (a.ignore_until IS NULL OR a.ignore_until > NOW())
-        )
     """)
     thresholds = cursor.fetchall()
 
@@ -100,22 +183,36 @@ def check_alerts():
 
         if severity:
             # Check if alert already exists and is not resolved
-            cursor.execute("""
-                SELECT alert_id FROM alerts
-                WHERE device_id = %s AND interface_id = %s AND alert_type = %s
-                AND resolved_at IS NULL
-                ORDER BY created_at DESC
-                LIMIT 1
-            """, (device_id, interface_id, metric_type))
+            if interface_id:
+                cursor.execute("""
+                    SELECT alert_id, is_ignored, ignore_until, notified_at FROM alerts
+                    WHERE device_id = %s AND interface_id = %s AND alert_type = %s
+                    AND resolved_at IS NULL
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                """, (device_id, interface_id, metric_type))
+            else:
+                cursor.execute("""
+                    SELECT alert_id, is_ignored, ignore_until, notified_at FROM alerts
+                    WHERE device_id = %s AND interface_id IS NULL AND alert_type = %s
+                    AND resolved_at IS NULL
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                """, (device_id, metric_type))
 
             existing_alert = cursor.fetchone()
 
+            # Skip if alert is currently ignored and ignore period hasn't expired
+            if existing_alert and existing_alert['is_ignored']:
+                if existing_alert['ignore_until'] is None or existing_alert['ignore_until'] > datetime.now():
+                    continue
+
             if not existing_alert:
-                # Create new alert
+                # Create new alert and notify immediately
                 message = generate_alert_message(threshold, current_value, severity)
                 cursor.execute("""
-                    INSERT INTO alerts (device_id, interface_id, alert_type, severity, message, value, threshold)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    INSERT INTO alerts (device_id, interface_id, alert_type, severity, message, value, threshold, notified_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
                 """, (device_id, interface_id, metric_type, severity, message, current_value, threshold_value))
                 alert_id = cursor.lastrowid
 
@@ -129,15 +226,39 @@ def check_alerts():
                 }
 
                 alerts_generated.append(alert_data)
-
-                # Send email notifications asynchronously (in a real app, this should be queued)
-                try:
-                    send_alert_notifications(alert_id, alert_data)
-                except Exception as e:
-                    print(f"Error sending notifications for alert {alert_id}: {e}")
+            elif not existing_alert['notified_at']:
+                # Alert exists but wasn't notified yet, notify now
+                message = generate_alert_message(threshold, current_value, severity)
+                alert_data = {
+                    'alert_id': existing_alert['alert_id'],
+                    'device_name': threshold['hostname'] or threshold['ip_address'],
+                    'severity': severity,
+                    'message': message,
+                    'alert_type': metric_type,
+                    'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+                alerts_generated.append(alert_data)
+                # Mark as notified
+                cursor.execute("""
+                    UPDATE alerts SET notified_at = NOW() WHERE alert_id = %s
+                """, (existing_alert['alert_id'],))
+            else:
+                # Alert exists and was already notified, just update the value
+                cursor.execute("""
+                    UPDATE alerts SET value = %s, severity = %s WHERE alert_id = %s
+                """, (current_value, severity, existing_alert['alert_id']))
 
     db.commit()
+    cursor.close()
     db.close()
+    
+    # Send notifications after committing and closing the database connection
+    for alert_data in alerts_generated:
+        try:
+            send_alert_notifications(alert_data['alert_id'], alert_data)
+        except Exception as e:
+            print(f"Error sending notifications for alert {alert_data['alert_id']}: {e}")
+    
     print(f"Generated {len(alerts_generated)} new alerts.")
     return alerts_generated
 

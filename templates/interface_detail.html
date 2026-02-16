@@ -1,0 +1,536 @@
+{% extends "base.html" %}
+
+{% block title %}NMS - {{page_title}}{% endblock %}
+
+{% block content %}
+
+<div class="gap-view"></div>
+
+<div class="device-detail-brief {{device.status|lower}}">
+    <div class="medium-vendor-icon">
+        <img src=" {% if device.vendor|lower=='cisco' %}/static/images/cisco.png
+                    {% elif device.vendor|lower=='mikrotik' %}/static/images/mikrotik.png
+                    {%elif device.vendor|lower=='linux'%}/static/images/linux.png
+                    {%else%}/static/images/router.png{% endif %}" alt="vendor_icon">
+    </div>
+    <div class="device-ip-brief-1">
+        <a href="/devices/device/{{device.device_id}}">{{device.ip_address}}</a>
+        <p>{% if device.location|lower!='none' %}{{device.location}}{% endif %}</p>
+    </div>
+    <div class="device-graph-brief-1">
+        <div style="max-height: 100%">
+            <canvas id="deviceMemoryChart"></canvas>
+            <p style="text-align: center;">Memory usage</p>
+        </div>
+        <div>
+            <canvas id="deviceCpuChart"></canvas>
+            <p style="text-align: center;">CPU usage</p>
+        </div>
+    </div>
+</div>
+
+<div class="device-detail-nav-1">
+    <div class="device-nav-bar-1">
+        <ul class="nav-menu-2">
+            <li class="nav-item-2">
+                <a href="/devices/device/{{device.device_id}}"><img src="/static/images/overview-1.png">Overview</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="#">
+                    <img src="/static/images/graph.png">Graphs<img src="/static/images/dropdown-icon-1.svg">
+                    <div class="dropdown-content">
+                        <a href="/devices/device/{{device.device_id}}/graphs/system">System</a>
+                        <a href="/devices/device/{{device.device_id}}/graphs/processor">Processor</a>
+                        <a href="/devices/device/{{device.device_id}}/graphs/memory">Memory</a>
+                        <a href="/devices/device/{{device.device_id}}/graphs/storage">Storage</a>
+                    </div>
+                </a>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="#">
+                    <img src="/static/images/health.png">Health<img src="/static/images/dropdown-icon-1.svg">
+                    <div class="dropdown-content">
+                        <a href="/devices/device/{{device.device_id}}/health/processor">Processor</a>
+                        <a href="/devices/device/{{device.device_id}}/health/memory">Memory</a>
+                        <a href="/devices/device/{{device.device_id}}/health/storage">Storage</a>
+                        <a href="/devices/device/{{device.device_id}}/health/status">Status</a>
+                        <a href="/devices/device/{{device.device_id}}/health/age">Age</a>
+                    </div>
+                </a>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="#">
+                    <img src="/static/images/ethernet-port.png">Ports<img src="/static/images/dropdown-icon-1.svg">
+                    <div class="dropdown-content">
+                        <a href="/devices/device/{{device.device_id}}/ports">Details</a>
+                        <hr>
+                        <a href="/devices/device/{{device.device_id}}/ports/ip">IP Address</a>
+                        <a href="/devices/device/{{device.device_id}}/ports/arp">ARP Table</a>
+                        <a href="/devices/device/{{device.device_id}}/ports/neighbors">Neighbours</a>
+                    </div>
+                </a>
+            </li>
+            <li>
+                <a href="/devices/device/{{device.device_id}}/alerts"><img src="/static/images/notification.png">Alerts</a>
+            </li>
+        </ul>
+    </div>
+    <div class="nav-right-2">
+        <ul class="nav-menu-3">
+            <li class="nav-item-2 dropdown">
+                <img src="/static/images/settings.png">
+                <img src="/static/images/dropdown-icon-1.svg">
+                <div class="dropdown-content-right">
+                    <a href="/devices/device/{{device.device_id}}/properties">Properties</a>
+                    <hr>
+                    <a href="#">Ignore</a>
+                    {% if current_user.role_name == 'admin' %}
+                        <a href="#">Delete Device</a>
+                    {% endif %}
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div class="interface-detail-container">
+    <div class="interface-header">
+        <h2>{{interface.name}} - Traffic Details</h2>
+        <div class="interface-info">
+            <div class="info-item">
+                <span class="info-label">Description:</span>
+                <span class="info-value">{{interface.description or 'N/A'}}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">MAC Address:</span>
+                <span class="info-value">{{interface.mac_address or 'N/A'}}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">IP Address:</span>
+                <span class="info-value">{{interface.ipv4_address or 'N/A'}}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Speed:</span>
+                <span class="info-value">
+                    {% if interface.speed %}
+                        {{interface.speed|format_speed}}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">MTU:</span>
+                <span class="info-value">{{interface.mtu or 'N/A'}}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Admin Status:</span>
+                <span class="status-badge {{interface.admin_status|lower}}">{{interface.admin_status|upper}}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Operational Status:</span>
+                <span class="status-badge {{interface.oper_status|lower}}">{{interface.oper_status|upper}}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Time frame selector -->
+    <div class="time-frame-selector">
+        <label for="timeFrame">Time Frame:</label>
+        <select id="timeFrame" onchange="updateTrafficGraphs()">
+            <option value="1h">Last 1 Hour</option>
+            <option value="6h">Last 6 Hours</option>
+            <option value="1d" selected>Last 24 Hours</option>
+            <option value="7d">Last 7 Days</option>
+            <option value="30d">Last 30 Days</option>
+        </select>
+    </div>
+
+    <!-- Traffic Statistics -->
+    <div class="traffic-stats-container">
+        <div class="traffic-stat-box">
+            <h3>Current Traffic</h3>
+            <div class="stat-row">
+                <span>Inbound:</span>
+                <span id="currentInBps" class="traffic-value">-- bps</span>
+            </div>
+            <div class="stat-row">
+                <span>Outbound:</span>
+                <span id="currentOutBps" class="traffic-value">-- bps</span>
+            </div>
+        </div>
+        <div class="traffic-stat-box">
+            <h3>Peak Traffic (24h)</h3>
+            <div class="stat-row">
+                <span>Inbound Peak:</span>
+                <span id="peakInBps" class="traffic-value">-- bps</span>
+            </div>
+            <div class="stat-row">
+                <span>Outbound Peak:</span>
+                <span id="peakOutBps" class="traffic-value">-- bps</span>
+            </div>
+        </div>
+        <div class="traffic-stat-box">
+            <h3>Average Traffic (24h)</h3>
+            <div class="stat-row">
+                <span>Inbound Avg:</span>
+                <span id="avgInBps" class="traffic-value">-- bps</span>
+            </div>
+            <div class="stat-row">
+                <span>Outbound Avg:</span>
+                <span id="avgOutBps" class="traffic-value">-- bps</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Traffic Graphs -->
+    <div class="traffic-graphs-container">
+        <div class="graph-container">
+            <h3>Traffic (Inbound/Outbound)</h3>
+            <canvas id="trafficChart" height="100"></canvas>
+        </div>
+        <div class="graph-container">
+            <h3>Inbound Traffic</h3>
+            <canvas id="inboundChart" height="100"></canvas>
+        </div>
+        <div class="graph-container">
+            <h3>Outbound Traffic</h3>
+            <canvas id="outboundChart" height="100"></canvas>
+        </div>
+    </div>
+
+    <div class="back-button">
+        <a href="/devices/device/{{device.device_id}}/ports">Back to Interface List</a>
+    </div>
+</div>
+
+<script>
+// Memory chart for brief
+fetch("/api/device/{{ device.device_id }}/memory")
+  .then(res => res.json())
+  .then(data => {
+    const ctx = document.getElementById("deviceMemoryChart").getContext("2d");
+
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: data.labels,
+        datasets: [{
+          data: data.memory,
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          hitRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        events: [],
+        hover: { mode: null },
+        interaction: { mode: null },
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        },
+        scales: {
+          x: {
+            type: "time",
+            ticks: { display: false },
+            grid: { display: false },
+            border: { display: false },
+            title: { display: false }
+          },
+          y: {
+            min: 0,
+            max: 100,
+            ticks: { display: false },
+            grid: { display: false },
+            border: { display: false },
+            title: { display: false }
+          }
+        },
+        animation: false,
+        elements: {
+          line: {
+            borderJoinStyle: 'round'
+          }
+        }
+      }
+    });
+});
+
+// CPU chart for brief
+fetch("/api/device/{{ device.device_id }}/cpu")
+  .then(res => res.json())
+  .then(data => {
+    const ctx = document.getElementById("deviceCpuChart").getContext("2d");
+
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: data.labels,
+        datasets: [{
+          data: data.cpu,
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          hitRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        events: [],
+        hover: { mode: null },
+        interaction: { mode: null },
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        },
+        scales: {
+          x: {
+            type: "time",
+            ticks: { display: false },
+            grid: { display: false },
+            border: { display: false },
+            title: { display: false }
+          },
+          y: {
+            min: 0,
+            max: 100,
+            ticks: { display: false },
+            grid: { display: false },
+            border: { display: false },
+            title: { display: false }
+          }
+        },
+        animation: false,
+        elements: {
+          line: {
+            borderJoinStyle: 'round'
+          }
+        }
+      }
+    });
+});
+
+let trafficChart = null;
+let inboundChart = null;
+let outboundChart = null;
+
+function formatTraffic(bps) {
+  if (bps === 0 || bps === null || bps === undefined) return '0 bps';
+  
+  const absBps = Math.abs(bps);
+  if (absBps >= 1e9) {
+    return (bps / 1e9).toFixed(2) + ' Gbps';
+  } else if (absBps >= 1e6) {
+    return (bps / 1e6).toFixed(1) + ' Mbps';
+  } else if (absBps >= 1e3) {
+    return (bps / 1e3).toFixed(0) + ' kbps';
+  } else {
+    return bps.toFixed(0) + ' bps';
+  }
+}
+
+function updateTrafficGraphs() {
+  const timeFrame = document.getElementById('timeFrame').value;
+  
+  fetch("/api/interface/{{interface.interface_id}}/traffic?time=" + timeFrame)
+    .then(res => res.json())
+    .then(data => {
+      // Update current values
+      const currentInBps = data.in_bps.length > 0 ? data.in_bps[data.in_bps.length - 1] : 0;
+      const currentOutBps = data.out_bps.length > 0 ? Math.abs(data.out_bps[data.out_bps.length - 1]) : 0;
+      
+      document.getElementById('currentInBps').textContent = formatTraffic(currentInBps);
+      document.getElementById('currentOutBps').textContent = formatTraffic(currentOutBps);
+      
+      // Calculate peak
+      const peakIn = data.in_bps.length > 0 ? Math.max(...data.in_bps) : 0;
+      const peakOut = data.out_bps.length > 0 ? Math.max(...data.out_bps.map(v => Math.abs(v))) : 0;
+      
+      document.getElementById('peakInBps').textContent = formatTraffic(peakIn);
+      document.getElementById('peakOutBps').textContent = formatTraffic(peakOut);
+      
+      // Calculate average
+      const avgIn = data.in_bps.length > 0 ? data.in_bps.reduce((a, b) => a + b, 0) / data.in_bps.length : 0;
+      const avgOut = data.out_bps.length > 0 ? data.out_bps.map(v => Math.abs(v)).reduce((a, b) => a + b, 0) / data.out_bps.length : 0;
+      
+      document.getElementById('avgInBps').textContent = formatTraffic(avgIn);
+      document.getElementById('avgOutBps').textContent = formatTraffic(avgOut);
+      
+      // Destroy previous charts if they exist
+      if (trafficChart) trafficChart.destroy();
+      if (inboundChart) inboundChart.destroy();
+      if (outboundChart) outboundChart.destroy();
+      
+      // Combined traffic chart
+      const ctx1 = document.getElementById('trafficChart').getContext('2d');
+      trafficChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: data.labels,
+          datasets: [
+            {
+              label: 'Inbound',
+              data: data.in_bps,
+              borderColor: 'rgba(75, 192, 192, 1)',
+              backgroundColor: 'rgba(75, 192, 192, 0.1)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 1,
+              pointHoverRadius: 4
+            },
+            {
+              label: 'Outbound',
+              data: data.out_bps.map(v => Math.abs(v)),
+              borderColor: 'rgba(255, 99, 132, 1)',
+              backgroundColor: 'rgba(255, 99, 132, 0.1)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 1,
+              pointHoverRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'top' },
+            tooltip: { enabled: true }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              title: { display: true, text: 'Time' }
+            },
+            y: {
+              title: { display: true, text: 'Bits per Second' },
+              ticks: {
+                callback: function(value) {
+                  return formatTraffic(value);
+                }
+              }
+            }
+          },
+          animation: false
+        }
+      });
+      
+      // Inbound only chart
+      const ctx2 = document.getElementById('inboundChart').getContext('2d');
+      inboundChart = new Chart(ctx2, {
+        type: 'line',
+        data: {
+          labels: data.labels,
+          datasets: [
+            {
+              label: 'Inbound Traffic',
+              data: data.in_bps,
+              borderColor: 'rgba(75, 192, 192, 1)',
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 1,
+              pointHoverRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: true }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              title: { display: true, text: 'Time' }
+            },
+            y: {
+              title: { display: true, text: 'Bits per Second' },
+              ticks: {
+                callback: function(value) {
+                  return formatTraffic(value);
+                }
+              }
+            }
+          },
+          animation: false
+        }
+      });
+      
+      // Outbound only chart
+      const ctx3 = document.getElementById('outboundChart').getContext('2d');
+      outboundChart = new Chart(ctx3, {
+        type: 'line',
+        data: {
+          labels: data.labels,
+          datasets: [
+            {
+              label: 'Outbound Traffic',
+              data: data.out_bps.map(v => Math.abs(v)),
+              borderColor: 'rgba(255, 99, 132, 1)',
+              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 1,
+              pointHoverRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: true }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              title: { display: true, text: 'Time' }
+            },
+            y: {
+              title: { display: true, text: 'Bits per Second' },
+              ticks: {
+                callback: function(value) {
+                  return formatTraffic(value);
+                }
+              }
+            }
+          },
+          animation: false
+        }
+      });
+    })
+    .catch(error => console.error('Error fetching traffic data:', error));
+}
+
+// Load graphs on page load
+document.addEventListener('DOMContentLoaded', function() {
+  updateTrafficGraphs();
+  
+  // Auto-refresh every 30 seconds for real-time updates
+  setInterval(updateTrafficGraphs, 30000);
+});
+
+// Refresh button functionality
+function refreshTraffic() {
+  updateTrafficGraphs();
+}
+</script>
+
+{% endblock %}

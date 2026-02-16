@@ -129,22 +129,24 @@
             </thead>
             <tbody>
                 {% for interface in interfaces %}
-                <tr class="interface-row 
+                <tr class="interface-row
                     {% if interface.oper_status == 'up' %}up
                     {% elif interface.admin_status == 'down' %}admin-down
                     {% elif interface.oper_status == 'down' %}oper-down
                     {% else %}default{% endif %}">
                     <td>
-                        <strong>{{interface.name}}</strong>
-                        {% if interface.description %}
-                        <br><small style="color: #666;">{{interface.description}}</small>
-                        {% endif %}
-                        {% if interface.ipv4_address %}
-                        <br><small style="color: #007bff;">IP: {{interface.ipv4_address}}</small>
-                        {% endif %}
-                        {% if interface.mac_address %}
-                        <br><small>MAC: {{interface.mac_address}}</small>
-                        {% endif %}
+                        <a href="/devices/device/{{device.device_id}}/interface/{{interface.interface_id}}" class="interface-link">
+                            <strong>{{interface.name}}</strong>
+                            {% if interface.description %}
+                            <br><small style="color: #666;">{{interface.description}}</small>
+                            {% endif %}
+                            {% if interface.ipv4_address %}
+                            <br><small style="color: #007bff;">IP: {{interface.ipv4_address}}</small>
+                            {% endif %}
+                            {% if interface.mac_address %}
+                            <br><small>MAC: {{interface.mac_address}}</small>
+                            {% endif %}
+                        </a>
                     </td>
                     <td class="traffic-cell">
                         <div class="traffic-graph-container">
