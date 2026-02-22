@@ -4,12 +4,12 @@
 
 {% block content %}
 <div class="net-dashboard">
-    <h3> Welcome to NMS DashBoard</h3>
+    <h2> Welcome to Network Monitoring DashBoard</h2>
 </div>
 <div class="gap-view"></div>
 
 <div class="summary-cards">
-    <div class="device-summary">
+    <div class="card device-summary">
         <table class="summary-table">
             <tr>
                 <th style="width: 16%;"></th>
@@ -127,5 +127,69 @@
     </tr>
     {% endfor %}
 </table> -->
+<div class="device-pie-chart">
+    <div class="chart-container">
+        <canvas id="devicePieChart"></canvas>
+    </div>
+    <div class="chart-container">
+        <canvas id="interfacePieChart"></canvas>
+    </div>
+</div>
+
+<script>
+    const device_Data = {{ device_pie | tojson }}
+    const interface_Data = {{ interfaces_pie | tojson  }}
+
+    new Chart(document.getElementById('devicePieChart'),{
+        type: 'pie',
+        data: {
+            labels: ["Up", "Down", "Ignored"],
+            datasets:[{
+                data:[
+                    device_Data.up,
+                    device_Data.down,
+                    device_Data.ignored
+                ]
+            }]
+        },
+        options:{
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                title:{
+                    display: true,
+                    text: 'Devices'
+                }
+            }
+        }
+    });
+    new Chart(document.getElementById('interfacePieChart'), {
+        type: 'pie',
+        data: {
+            labels: ["Up", "Down", "Disabled"],
+            datasets: [{
+                data: [
+                    interface_Data.up,
+                    interface_Data.down,
+                    interface_Data.disabled
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins:{
+                legend:{
+                    position: 'top'
+                },
+                title:{
+                    display: true,
+                    text: 'Interfaces'
+                }
+            }
+        }
+    });
+</script>
 
 {% endblock %}
