@@ -84,7 +84,7 @@
                     <hr>
                     <a href="#">Ignore</a>
                     {% if current_user.role_name == 'admin' %}
-                        <a href="#">Delete Device</a>
+                        <a href="/device/delete">Delete Device</a>
                     {% endif %}
                 </div>
             </li>
@@ -208,7 +208,7 @@
             <tr>
                 <td colspan="4">
                     {% for interface in interfaces %}
-                        <a href="#" class="interface-link 
+                        <a href="/devices/device/{{device.device_id}}/interface/{{interface.interface_id}}" class="interface-link 
                             {% if interface.oper_status == 'up' %}up
                             {% elif interface.admin_status == 'down' %}admin-down
                             {% elif interface.oper_status == 'down' %}oper-down

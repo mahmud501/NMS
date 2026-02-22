@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, json
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from modules.reports import generate_availability_report, generate_performance_report, create_pdf_report, save_report_to_db
 from modules.alerts import check_alerts, get_active_alerts, acknowledge_alert, resolve_alert, ignore_alert
@@ -66,8 +66,39 @@ def dashboard():
 
     cursor.close()
     db.close()
+    device_pie = {
+        "up": 0,
+        "down": 0,
+        "ignored": 0
+    }
 
-    return render_template("dashboard.html", devices=devices, interfaces=interfaces)
+    for d in devices:
+        if d.get("polling_status") == "active":
+            status = d.get("status", "").lower()
+            if status in device_pie:
+                device_pie[status] +=1
+        else:
+            device_pie["ignored"] +=1
+    
+    interfaces_pie = {
+        "up": 0,
+        "down": 0,
+        "disabled": 0
+    }
+    for i in interfaces:
+        if i.get("admin_status") == "up":
+            oper_status = i.get("oper_status", "").lower()
+            if oper_status in interfaces_pie:
+                interfaces_pie[oper_status] +=1
+        else:
+            interfaces_pie["disabled"] +=1
+    # device_pie = json.dumps(device_pie)
+    # interfaces_pie = json.dumps(interfaces_pie)
+
+    return render_template("dashboard.html", 
+                           devices=devices, interfaces=interfaces, 
+                           device_pie=device_pie, interfaces_pie=interfaces_pie
+                           )
 
     
 @app.route("/devices/<device_type>")
@@ -919,6 +950,23 @@ def edit_user(user_id):
     
     return render_template("edit_user.html", user=user_data, roles=roles)
 
+@app.route("/users/<int:user_id>/delete", methods=["POST"])
+@login_required
+def delete_user(user_id):
+    if current_user.role_name not in ['admin']:
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect(url_for('users'))
+    
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute(" DELETE FROM users WHERE user_id = %s",(user_id,))
+    db.commit()
+    cursor.close()
+    db.close()
+    flash('User deleted successfuly', "success")
+    return(redirect(url_for('users')))
+    
+
 @app.route("/alerts/thresholds")
 @login_required
 def alert_thresholds():
@@ -1083,21 +1131,19 @@ def edit_alert_threshold(threshold_id):
 @login_required
 def delete_alert_threshold(threshold_id):
     if current_user.role_name not in ['admin', 'operator']:
-        return jsonify({'success': False, 'error': 'Access denied'}), 403
+        flash('Access denied. Admin/Operator privileges required.', 'error')
+        return redirect(url_for('alert_thresholds'))
     
     db = get_db()
     cursor = db.cursor()
-    try:
-        cursor.execute("DELETE FROM alert_thresholds WHERE threshold_id = %s", (threshold_id,))
-        db.commit()
-        return jsonify({'success': True, 'message': 'Alert threshold deleted successfully'}), 200
-    except Exception as e:
-        db.rollback()
-        print(f"Error deleting threshold {threshold_id}: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 400
-    finally:
-        cursor.close()
-        db.close()
+    cursor.execute("DELETE FROM alert_thresholds WHERE threshold_id = %s", (threshold_id,))
+    cursor.execute("DELETE FROM ")
+    db.commit()
+    flash('Alert threshold deleted successfully', "success")
+    cursor.close()
+    db.close()
+
+    return(redirect(url_for('alert_thresholds')))
 
 @app.route("/alerts/check", methods=["POST"])
 @login_required

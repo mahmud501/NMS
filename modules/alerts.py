@@ -116,6 +116,7 @@ def check_alerts():
     alerts_generated = []
 
     for threshold in thresholds:
+        threshold_id= threshold['threshold_id']
         device_id = threshold['device_id']
         metric_type = threshold['metric_type']
         interface_id = threshold['interface_id']
@@ -211,9 +212,9 @@ def check_alerts():
                 # Create new alert and notify immediately
                 message = generate_alert_message(threshold, current_value, severity)
                 cursor.execute("""
-                    INSERT INTO alerts (device_id, interface_id, alert_type, severity, message, value, threshold, notified_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
-                """, (device_id, interface_id, metric_type, severity, message, current_value, threshold_value))
+                    INSERT INTO alerts (device_id, interface_id, alert_type, severity, message, value, threshold, threshold_id, notified_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                """, (device_id, interface_id, metric_type, severity, message, current_value, threshold_value, threshold_id))
                 alert_id = cursor.lastrowid
 
                 alert_data = {
