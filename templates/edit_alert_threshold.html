@@ -11,19 +11,20 @@
         <form method="POST">
             <div class="form-group">
                 <label for="device_id">Device</label>
-                <select id="device_id" name="device_id" disabled>
+                <select id="device_id" disabled>
                     {% for device in devices %}
                     <option value="{{ device.device_id }}" {% if device.device_id == threshold.device_id %}selected{% endif %}>
                         {{ device.hostname or 'Unknown' }} ({{ device.ip_address }})
                     </option>
                     {% endfor %}
                 </select>
+                <input type="hidden" name="device_id" value="{{ threshold.device_id }}">
                 <small class="form-text">Device cannot be changed</small>
             </div>
 
             <div class="form-group">
                 <label for="interface_id">Interface</label>
-                <select id="interface_id" name="interface_id" disabled>
+                <select id="interface_id" disabled>
                     <option value="">All Interfaces</option>
                     {% for interface in interfaces %}
                     <option value="{{ interface.interface_id }}" {% if interface.interface_id == threshold.interface_id %}selected{% endif %}>
@@ -31,6 +32,7 @@
                     </option>
                     {% endfor %}
                 </select>
+                <input type="hidden" name="interface_id" value="{{ threshold.interface_id or '' }}">
                 <small class="form-text">Interface cannot be changed</small>
             </div>
 
@@ -45,12 +47,13 @@
             {% else %}
             <div class="form-group">
                 <label for="metric_type">Metric Type</label>
-                <select id="metric_type" name="metric_type" disabled>
+                <select id="metric_type" disabled>
                     <option value="cpu" {% if threshold.metric_type == 'cpu' %}selected{% endif %}>CPU Usage (%)</option>
                     <option value="memory" {% if threshold.metric_type == 'memory' %}selected{% endif %}>Memory Usage (%)</option>
                     <option value="disk" {% if threshold.metric_type == 'disk' %}selected{% endif %}>Disk Usage (%)</option>
                     <option value="interface_traffic" {% if threshold.metric_type == 'interface_traffic' %}selected{% endif %}>Interface Traffic (Mbps)</option>
                 </select>
+                <input type="hidden" name="metric_type" value="{{ threshold.metric_type }}">
                 <small class="form-text">Metric type cannot be changed</small>
             </div>
             {% endif %}
@@ -91,7 +94,7 @@
                     {% if threshold.is_active %}
                         <span class="badge badge-success">Active</span>
                     {% else %}
-                        <span class="badge badge-secondary">Inactive</span>
+                        <span class="badge badge-danger">Inactive</span>
                     {% endif %}
                 </p>
             </div>

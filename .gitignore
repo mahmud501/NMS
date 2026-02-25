@@ -1,4 +1,4 @@
-.env
+*.env
 static/reports/
 test_poll_availability.py
 test_poll_deviceadd.py

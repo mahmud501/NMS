@@ -33,12 +33,15 @@
                         {% if threshold.interface_name %}
                             {{ threshold.interface_name }}
                         {% else %}
-                            All Interfaces
+                            None
                         {% endif %}
                     </td>
                     <td>
-                        <span class="badge badge-metric-{{ threshold.metric_type }}">
-                            {{ threshold.metric_type|replace('_', ' ')|title }}
+                        <span class="badge {% if threshold.device_status == 'down'%} badge-metric-{{ threshold.device_status }} {% else %}badge-metric-{{ threshold.metric_type }} {% endif %}">
+                            {% if threshold.device_status == 'down' %}
+                            {{ threshold.device_status | title}}
+                            {% else %}{{ threshold.metric_type|replace('_', ' ')|title }}
+                            {% endif %}
                         </span>
                     </td>
                     <td>
@@ -67,7 +70,7 @@
                         {% if threshold.is_active %}
                             <span class="badge badge-success">Active</span>
                         {% else %}
-                            <span class="badge badge-secondary">Inactive</span>
+                            <span class="badge badge-danger">Inactive</span>
                         {% endif %}
                     </td>
                     <td>

@@ -225,7 +225,7 @@
 .badge-metric-cpu, 
 .badge-metric-memory, 
 .badge-metric-disk, 
-.badge-metric-availability { 
+.badge-metric-down { 
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: white;
     padding: 6px 12px;
