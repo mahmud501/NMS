@@ -44,6 +44,7 @@ def check_alerts():
                 alert_data = {
                     'alert_id': alert_id,
                     'device_name': f'Device ID: {device_id} Alert ID:{alert_id}',
+                    'device_ip': threshold['ip_address'],
                     'severity': severity,
                     'message': 'Alert Threshold Deleted',
                     'alert_type': metric_type,
@@ -70,6 +71,7 @@ def check_alerts():
                 alert_data = {
                     'alert_id': alert_id,
                     'device_name': f'{device_id}',
+                    'device_ip': threshold['ip_address'],
                     'severity': severity,
                     'message': f'{device_id} is Up',
                     'alert_type': metric_type,
@@ -138,6 +140,7 @@ def check_alerts():
                     alert_data = {
                         'alert_id': alert_id,
                         'device_name': f'{device_id}',
+                        'device_ip': threshold['ip_address'],
                         'severity': 'info',
                         'message': f'Condition returned to normal (value: {current_value})',
                         'alert_type': metric_type,
@@ -203,6 +206,7 @@ def check_alerts():
                     alert_data = {
                         'alert_id': alert_id,
                         'device_name': threshold['hostname'] or threshold['ip_address'],
+                        'device_ip': threshold['ip_address'],
                         'severity': severity,
                         'message': message,
                         'alert_type': metric_type,
@@ -216,6 +220,7 @@ def check_alerts():
                     alert_data = {
                         'alert_id': existing_alert['alert_id'],
                         'device_name': threshold['hostname'] or threshold['ip_address'],
+                        'device_ip': threshold['ip_address'],
                         'severity': severity,
                         'message': message,
                         'alert_type': metric_type,
@@ -324,6 +329,7 @@ def check_alerts():
                 alert_data = {
                     'alert_id': alert_id,
                     'device_name': threshold['hostname'] or threshold['ip_address'],
+                    'device_ip': threshold['ip_address'],
                     'severity': severity,
                     'message': message,
                     'alert_type': metric_type,
@@ -337,6 +343,7 @@ def check_alerts():
                 alert_data = {
                     'alert_id': existing_alert['alert_id'],
                     'device_name': threshold['hostname'] or threshold['ip_address'],
+                    'device_ip': threshold['ip_address'],
                     'severity': severity,
                     'message': message,
                     'alert_type': metric_type,

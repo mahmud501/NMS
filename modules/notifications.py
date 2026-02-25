@@ -2,6 +2,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from modules.db import get_db
+from modules.utils import format_time
 import os
 
 def send_email_notification(to_email, subject, body):
@@ -53,15 +54,28 @@ def send_alert_notifications(alert_id, alert_data):
         """, (alert_data['severity'],))
 
         users = cursor.fetchall()
-
-        subject = f"NMS Alert: {alert_data['severity'].upper()} - {alert_data['device_name']}"
+        
+        cursor.execute("""
+            SELECT device_id, hostname, ip_address, device_type, model, os_version, location, uptime
+            FROM devices WHERE ip_address=%s
+        """,(alert_data['device_ip'],))
+        device=cursor.fetchone()
+        device['uptime'] = format_time(device['uptime'])
+        
+        subject = f"NMS Alert: {alert_data['severity'].upper()} - {device['hostname']} - {device['ip_address']}"
         body = f"""
         <html>
         <body>
             <h2>New {alert_data['severity'].upper()} Alert</h2>
             <p><strong>Device:</strong> {alert_data['device_name']}</p>
+            <p><strong>Device IP::</strong> {device['ip_address']}
             <p><strong>Alert Type:</strong> {alert_data['alert_type'].upper()}</p>
             <p><strong>Message:</strong> {alert_data['message']}</p>
+            <p><strong>Location:</strong> {device['location']}</p>
+            <p><strong>Device Type:</strong> {device['device_type']}</p>
+            <p><strong>Model:</strong> {device['model']}</p>
+            <p><strong>Operating System:</strong> {device['os_version']}</p>
+            <p><strong>Uptime:</strong> {device['uptime']}</p>
             <p><strong>Time:</strong> {alert_data.get('created_at', 'Unknown')}</p>
             <br>
             <p><a href="{os.getenv('APP_URL', 'http://localhost:5000')}/alerts">View All Alerts</a></p>
