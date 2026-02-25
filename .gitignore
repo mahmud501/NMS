@@ -1,2 +1,7 @@
 .env
 static/reports/
+test_poll_availability.py
+test_poll_deviceadd.py
+test_poll_interface.py
+test_poll.py
+test_poll_arp_cdp.py
