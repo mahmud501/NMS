@@ -6,102 +6,146 @@
 <div class="add-threshold-container">
     <div class="form-container">
         <h2>Add Alert Threshold</h2>
-
-        <form method="POST">
-            <div class="form-group">
-                <label for="device_id">Device *</label>
-                <select id="device_id" name="device_id" required>
-                    <option value="">Select a device</option>
-                    {% for device in devices %}
-                    <option value="{{ device.device_id }}">{{ device.hostname or 'Unknown' }} ({{ device.ip_address }})</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="interface_id">Interface (Optional)</label>
-                <select id="interface_id" name="interface_id">
-                    <option value="">All Interfaces</option>
-                    {% for interface in interfaces %}
-                    <option value="{{ interface.interface_id }}">{{ interface.hostname }} - {{ interface.name }}</option>
-                    {% endfor %}
-                </select>
-                <small class="form-text">Leave blank to apply threshold to all interfaces on the device</small>
-            </div>
-
-            <div class="form-group">
-                <label for="metric_type">Metric Type *</label>
-                <select id="metric_type" name="metric_type" required>
-                    <option value="">Select metric type</option>
-                    <option value="cpu">CPU Usage (%)</option>
-                    <option value="memory">Memory Usage (%)</option>
-                    <option value="disk">Disk Usage (%)</option>
-                    <option value="availability">Availability (%)</option>
-                    <option value="interface_traffic">Interface Traffic (Mbps)</option>
-                </select>
-            </div>
-
-            <div class="threshold-inputs">
+        <div class="alert-type-select">
+            <div class="add-alert-type"><button class="btn btn-primary" id="alertDown">Availability Based</button></div>
+            <div class="add-alert-type"><button class="btn btn-primary" id="alertUsage">Usage Based</button></div>
+        </div>
+        <div class="add-alert-down">
+            <form method="POST">
                 <div class="form-group">
-                    <label for="warning_threshold">Warning Threshold</label>
-                    <input type="number" id="warning_threshold" name="warning_threshold" step="0.1" min="0">
-                    <small class="form-text">Alert when value exceeds this threshold</small>
+                    <label for="device_id">Device *</label>
+                    <select id="device_id" name="device_id" required>
+                        <option value="">Select a device</option>
+                        {% for device in devices %}
+                        <option value="{{ device.device_id }}">{{ device.hostname or 'Unknown' }} ({{ device.ip_address
+                            }})</option>
+                        {% endfor %}
+                    </select>
+                    <label for="device_status">Device Status</label>
+                    <select id="device_status" name="device_status">
+                        <option value="down">Down</option>
+                    </select>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Create Threshold</button>
+                        <a href="/alerts/thresholds" class="btn btn-secondary">Cancel</a>
+                    </div>  
+                </div>
+            </form>
+        </div>
+        <div class="add-alert-usage" style="display: none;">
+            <form method="POST">
+                <div class="form-group">
+                    <label for="device_id">Device *</label>
+                    <select id="device_id" name="device_id" required>
+                        <option value="">Select a device</option>
+                        {% for device in devices %}
+                        <option value="{{ device.device_id }}">{{ device.hostname or 'Unknown' }} ({{ device.ip_address
+                            }})</option>
+                        {% endfor %}
+                    </select>
                 </div>
 
                 <div class="form-group">
-                    <label for="critical_threshold">Critical Threshold</label>
-                    <input type="number" id="critical_threshold" name="critical_threshold" step="0.1" min="0">
-                    <small class="form-text">Critical alert when value exceeds this threshold</small>
+                    <label for="interface_id">Interface (Optional)</label>
+                    <select id="interface_id" name="interface_id">
+                        <option value="">All Interfaces</option>
+                        {% for interface in interfaces %}
+                        <option value="{{ interface.interface_id }}">{{ interface.hostname }} - {{ interface.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-text">Leave blank to apply threshold to all interfaces on the device</small>
                 </div>
-            </div>
 
-            <div class="threshold-info">
-                <h4>Threshold Guidelines</h4>
-                <ul>
-                    <li><strong>CPU/Memory/Disk:</strong> Percentage values (0-100)</li>
-                    <li><strong>Availability:</strong> Percentage values (0-100), where 100 = always up</li>
-                    <li><strong>Interface Traffic:</strong> Mbps values for combined in/out traffic</li>
-                    <li><strong>Warning:</strong> Lower threshold for early notification</li>
-                    <li><strong>Critical:</strong> Higher threshold for urgent alerts</li>
-                </ul>
-            </div>
+                <div class="form-group">
+                    <label for="metric_type">Metric Type *</label>
+                    <select id="metric_type" name="metric_type" required>
+                        <option value="">Select metric type</option>
+                        <option value="cpu">CPU Usage (%)</option>
+                        <option value="memory">Memory Usage (%)</option>
+                        <option value="disk">Disk Usage (%)</option>
+                        <option value="interface_traffic">Interface Traffic (Mbps)</option>
+                    </select>
+                </div>
 
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Create Threshold</button>
-                <a href="/alerts/thresholds" class="btn btn-secondary">Cancel</a>
-            </div>
-        </form>
+                <div class="threshold-inputs">
+                    <div class="form-group">
+                        <label for="warning_threshold">Warning Threshold</label>
+                        <input type="number" id="warning_threshold" name="warning_threshold" step="0.1" min="0">
+                        <small class="form-text">Alert when value exceeds this threshold</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="critical_threshold">Critical Threshold</label>
+                        <input type="number" id="critical_threshold" name="critical_threshold" step="0.1" min="0">
+                        <small class="form-text">Critical alert when value exceeds this threshold</small>
+                    </div>
+                </div>
+
+                <div class="threshold-info">
+                    <h4>Threshold Guidelines</h4>
+                    <ul>
+                        <li><strong>CPU/Memory/Disk:</strong> Percentage values (0-100)</li>
+                        <li><strong>Interface Traffic:</strong> Mbps values for combined in/out traffic</li>
+                        <li><strong>Warning:</strong> Lower threshold for early notification</li>
+                        <li><strong>Critical:</strong> Higher threshold for urgent alerts</li>
+                    </ul>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Create Threshold</button>
+                    <a href="/alerts/thresholds" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const metricType = document.getElementById('metric_type');
-    const warningInput = document.getElementById('warning_threshold');
-    const criticalInput = document.getElementById('critical_threshold');
+    document.addEventListener('DOMContentLoaded',function() {
+        const alertDown = document.getElementById('alertDown');
+        const alertUsage = document.getElementById('alertUsage');
+        const addAlertDown = document.querySelector('.add-alert-down');
+        const addAlertUsage = document.querySelector('.add-alert-usage');
+        alertDown.style.background = 'darkgreen';
+        alertUsage.onclick = function() {
+            alertDown.style.background = 'blue';
+            alertUsage.style.background = 'darkgreen';
+            addAlertUsage.style.display = 'block';
+            addAlertDown.style.display = 'none';
+        };
+        alertDown.onclick = function() {
+            alertDown.style.background = 'darkgreen';
+            alertUsage.style.background = 'blue';
+            addAlertUsage.style.display = 'none';
+            addAlertDown.style.display = 'block';
+        };
 
-    function updatePlaceholders() {
-        const metric = metricType.value;
-        if (metric === 'cpu') {
-            warningInput.placeholder = 'e.g., 70';
-            criticalInput.placeholder = 'e.g., 90';
-        } else if (metric === 'memory') {
-            warningInput.placeholder = 'e.g., 75';
-            criticalInput.placeholder = 'e.g., 95';
-        } else if (metric === 'disk') {
-            warningInput.placeholder = 'e.g., 80';
-            criticalInput.placeholder = 'e.g., 95';
-        } else if (metric === 'availability') {
-            warningInput.placeholder = 'e.g., 95';
-            criticalInput.placeholder = 'e.g., 99';
-        } else if (metric === 'interface_traffic') {
-            warningInput.placeholder = 'e.g., 50';
-            criticalInput.placeholder = 'e.g., 100';
+    });
+    document.addEventListener('DOMContentLoaded', function () {
+        const metricType = document.getElementById('metric_type');
+        const warningInput = document.getElementById('warning_threshold');
+        const criticalInput = document.getElementById('critical_threshold');
+
+        function updatePlaceholders() {
+            const metric = metricType.value;
+            if (metric === 'cpu') {
+                warningInput.placeholder = 'e.g., 70';
+                criticalInput.placeholder = 'e.g., 90';
+            } else if (metric === 'memory') {
+                warningInput.placeholder = 'e.g., 75';
+                criticalInput.placeholder = 'e.g., 95';
+            } else if (metric === 'disk') {
+                warningInput.placeholder = 'e.g., 80';
+                criticalInput.placeholder = 'e.g., 95';
+            } else if (metric === 'interface_traffic') {
+                warningInput.placeholder = 'e.g., 50';
+                criticalInput.placeholder = 'e.g., 100';
+            }
         }
-    }
 
-    metricType.addEventListener('change', updatePlaceholders);
-    updatePlaceholders(); // Set initial placeholders
-});
+        metricType.addEventListener('change', updatePlaceholders);
+        updatePlaceholders(); // Set initial placeholders
+    });
 </script>
 {% endblock %}

@@ -29,6 +29,7 @@ body {
     --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
     --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
     --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+    --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-dark));
 }
 
 /* Common components (moved from templates) */
@@ -210,8 +211,8 @@ body {
 }
 
 .nav-item a:hover {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(79, 70, 229, 0.1) 100%);
-    color: var(--primary);
+    background: linear-gradient(135deg, rgba(26, 30, 248, 0.527) 0%, rgba(32, 21, 240, 0.986) 100%);
+    color: white;
 }
 
 .dropdown-content {
@@ -254,8 +255,8 @@ body {
 
 .dropdown-content a:hover,
 .dropdown-content-right a:hover {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(79, 70, 229, 0.1) 100%);
-    color: var(--primary);
+    background: linear-gradient(135deg, rgba(27, 121, 165, 0.836) 0%, rgba(78, 70, 229, 0.945) 100%);
+    color: whitesmoke;
 }
 
 .nav-item:hover .dropdown-content,
@@ -319,7 +320,7 @@ body {
 @keyframes fadeOut {
     to{
         opacity: 0;
-        transform: translateZ(100%);
+        transform: translateX(100%);
     }    
 }
 
@@ -412,7 +413,7 @@ body {
 
 .device-summary, .alert-summary{
     flex:1;
-    width: 48%;
+    min-width: 300px;
     background: linear-gradient(135deg, #f8fafc 0%, #f0f4f8 100%);
     border-radius: 8px;
     padding: 20px;
@@ -545,6 +546,7 @@ body {
     font-weight: 600;
     text-decoration: none;
     transition: all 0.3s ease;
+    font-weight: bold;
 }
 .device-table a:hover{
     background-color: transparent;
@@ -616,7 +618,7 @@ body {
     background-color: var(--surface);
 }
 .device-detail-brief.up:hover{
-    background-color: linear-gradient(135deg, #f8fafc 0%, #f0f4f8 100%);
+    background: linear-gradient(135deg, #f8fafc 0%, #f0f4f8 100%);
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
 }
@@ -724,7 +726,7 @@ body {
 .device-detail-info-1,
 .device-detail-graph-1 {
     flex: 1;
-    width: 48%;
+    min-width: 300px;
     background-color: var(--surface);
     border-radius: var(--radius);
     padding: 20px;
@@ -1453,6 +1455,7 @@ body {
 .interface-list-table a:hover{
     color:rgb(2, 2, 88);
     background-color: unset;
+    font-weight: bold;
 }
 
 .interface-list-row-1.up-up{

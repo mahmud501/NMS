@@ -197,10 +197,20 @@
 
 
 /* alert_thresholds and alerts */
-.add-threshold-container { 
+.add-threshold-container, .edit-threshold-container { 
     display: flex; 
     justify-content: center; 
     padding: 20px;
+}
+.alert-type-select{
+   display: flex;
+   gap: 20px;
+   align-items: center;
+}
+.add-alert-type{
+   flex:1;
+   padding: 20px;
+   border-radius: 14px;
 }
 .thresholds-container { 
     padding: 20px; 

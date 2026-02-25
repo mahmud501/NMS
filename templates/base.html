@@ -8,79 +8,80 @@
 </head>
 
 <body>
+    {% if current_user.is_authenticated %}
+        <nav class="navbar">
+            <!-- <div class="nav-left">
+                <a href="/">NMS</a>
+            </div> -->
+            <div class="nav-menu-div">
+                <ul class="nav-menu">
+                    <li class="nav-item"><a href="/dashboard">Dashboard</a></li>
 
-    <nav class="navbar">
-        <div class="nav-left">
-            <a href="/">NMS</a>
-        </div>
-        <div class="nav-menu-div">
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="nav-item dropdown">
+                        <a href="#">Devices
+                            <img src="/static/images/dropdown-icon-1.svg">
+                        </a>
+                        <div class="dropdown-content">
+                            <a href="/devices/all">All Devices</a>
+                            <a href="/devices/up">Up Devices</a>
+                            <a href="/devices/down">Down Devices</a>
+                            {% if current_user.role_name in ['admin', 'operator'] %}
+                            <a href="/devices/add">Add Device</a>
+                            {% endif %}
+                            {% if current_user.role_name == 'admin' %}
+                            <a href="/device/delete">Delete Device</a>
+                            {% endif %}
+                        </div>
+                    </li>
 
-                <li class="nav-item dropdown">
-                    <a href="#">Devices
-                        <img src="/static/images/dropdown-icon-1.svg">
-                    </a>
-                    <div class="dropdown-content">
-                        <a href="/devices/all">All Devices</a>
-                        <a href="/devices/up">Up Devices</a>
-                        <a href="/devices/down">Down Devices</a>
-                        {% if current_user.role_name in ['admin', 'operator'] %}
-                        <a href="/devices/add">Add Device</a>
-                        {% endif %}
-                        {% if current_user.role_name == 'admin' %}
-                        <a href="/device/delete">Delete Device</a>
-                        {% endif %}
-                    </div>
-                </li>
+                    <li class="nav-item dropdown">
+                        <a href="#">Alerts
+                            <img src="/static/images/dropdown-icon-1.svg">
+                        </a>
+                        <div class="dropdown-content">
+                            <a href="/alerts">All Alerts</a>
+                        </div>
+                    </li>
 
-                <li class="nav-item dropdown">
-                    <a href="#">Alerts
-                        <img src="/static/images/dropdown-icon-1.svg">
-                    </a>
-                    <div class="dropdown-content">
-                        <a href="/alerts">All Alerts</a>
-                    </div>
-                </li>
+                    <li class="nav-item dropdown">
+                        <a href="#">Administration
+                            <img src="/static/images/dropdown-icon-1.svg">
+                        </a>
+                        <div class="dropdown-content">
+                            {% if current_user.role_name == 'admin' %}
+                            <a href="/users">Users</a>
+                            {% endif %}
+                            <a href="/alerts/thresholds">Alert Thresholds</a>
+                        </div>
+                    </li>
 
-                <li class="nav-item dropdown">
-                    <a href="#">Administration
-                        <img src="/static/images/dropdown-icon-1.svg">
-                    </a>
-                    <div class="dropdown-content">
-                        {% if current_user.role_name == 'admin' %}
-                        <a href="/users">Users</a>
-                        {% endif %}
-                        <a href="/alerts/thresholds">Alert Thresholds</a>
-                    </div>
-                </li>
+                    <li class="nav-item dropdown">
+                        <a href="#">Reports
+                            <img src="/static/images/dropdown-icon-1.svg">
+                        </a>
+                        <div class="dropdown-content">
+                            <a href="/reports">Performance Report</a>
+                            <a href="/reports/availability">Availability Report</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
 
-                <li class="nav-item dropdown">
-                    <a href="#">Reports
-                        <img src="/static/images/dropdown-icon-1.svg">
-                    </a>
-                    <div class="dropdown-content">
-                        <a href="/reports">Performance Report</a>
-                        <a href="/reports/availability">Availability Report</a>
-                    </div>
-                </li>
-            </ul>
-        </div>
-
-        <div class="nav-right">
-            <ul class="nav-menu">
-                <li class="nav-item dropdown">
-                    <a href="#">Profile
-                        <img src="/static/images/dropdown-icon-1.svg">
-                    </a>
-                    <div class="dropdown-content-right">
-                        <a href="/profile">My Profile</a>
-                        <a href="/logout">Logout</a>
-                    </div>
-                </li>
-            </ul>
-        </div>
-    </nav>
+            <div class="nav-right">
+                <ul class="nav-menu">
+                    <li class="nav-item dropdown">
+                        <a href="#">Profile
+                            <img src="/static/images/dropdown-icon-1.svg">
+                        </a>
+                        <div class="dropdown-content-right">
+                            <a href="/profile">My Profile</a>
+                            <a href="/logout">Logout</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    {% endif %}
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div id="flash-messages-container">
@@ -93,7 +94,7 @@
                             {% else %}ⓘ{% endif %}
                         </span>
                         <span class="flash-text">{{ message }}</span>
-                        <span class="flash-close" onclick="this.parentElement.remove()">x</span>
+                        <span class="flash-close" onclick="this.parentElement.remove()">&times</span>
                     </div>
                 {% endfor %}
             </div>

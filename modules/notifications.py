@@ -46,7 +46,7 @@ def send_alert_notifications(alert_id, alert_data):
     try:
         # Get users who want notifications for this severity
         cursor.execute("""
-            SELECT u.email, u.username, ns.*
+            SELECT u.email, u.username, u.user_id, ns.*
             FROM users u
             JOIN notification_settings ns ON u.user_id = ns.user_id
             WHERE ns.alert_severity = %s AND ns.email_enabled = TRUE
@@ -74,8 +74,8 @@ def send_alert_notifications(alert_id, alert_data):
             if send_email_notification(user['email'], subject, body):
                 # Log successful notification
                 cursor.execute("""
-                    INSERT INTO notifications (alert_id, user_id, notification_type, status)
-                    VALUES (%s, %s, 'email', 'sent')
+                    INSERT INTO notifications (alert_id, user_id, notification_type, status, sent_at)
+                    VALUES (%s, %s, 'email', 'sent', NOW())
                 """, (alert_id, user['user_id']))
                 sent_count += 1
             else:
@@ -111,11 +111,24 @@ def create_default_notification_settings():
             existing = cursor.fetchone()
 
             if not existing:
-                # Create default settings for warning and critical alerts
+                # Create default settings for warning alerts
                 cursor.execute("""
                     INSERT INTO notification_settings (user_id, alert_severity, email_enabled)
-                    VALUES (%s, 'warning', TRUE), (%s, 'critical', TRUE)
-                """, (user['user_id'], user['user_id']))
+                    VALUES (%s, 'warning', TRUE)
+                """, (user['user_id'],))
+                
+                # Create default settings for critical alerts
+                cursor.execute("""
+                    INSERT INTO notification_settings (user_id, alert_severity, email_enabled)
+                    VALUES (%s, 'critical', TRUE)
+                """, (user['user_id'],))
+
+                # Create default settings for Info alerts
+                cursor.execute("""
+                    INSERT INTO notification_settings (user_id, alert_severity, email_enabled)
+                    VALUES (%s, 'info', TRUE)
+                """, (user['user_id'],))
+
 
         db.commit()
         print("Created default notification settings for all users")

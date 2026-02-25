@@ -8,6 +8,7 @@ from modules.utils import format_time, format_speed, hash_user_password, verify_
 from datetime import datetime, timedelta
 import hashlib
 import os
+import mysql.connector
 
 app = Flask(__name__)
 
@@ -344,7 +345,7 @@ def device_alerts(device_id):
         FROM alerts a
         LEFT JOIN users u ON a.acknowledged_by = u.user_id
         LEFT JOIN roles r ON u.role_id = r.role_id
-        WHERE a.device_id = %s
+        WHERE a.device_id = %s  /* AND resolved_at is NULL */
         ORDER BY a.alert_id DESC
         LIMIT 100
     """, (device_id,))
@@ -998,41 +999,62 @@ def add_alert_threshold():
     
     if request.method == "POST":
         device_id = request.form.get('device_id')
+        device_status = request.form.get('device_status') or None
         interface_id = request.form.get('interface_id') or None
-        metric_type = request.form.get('metric_type')
+        metric_type = request.form.get('metric_type') or None
         warning_threshold = request.form.get('warning_threshold') or None
         critical_threshold = request.form.get('critical_threshold') or None
         
-        # Validate input
-        if not all([device_id, metric_type]):
-            flash('Device and metric type are required.', 'error')
-            return redirect(url_for('add_alert_threshold'))
-        
-        # Convert to float if provided
-        try:
-            warning_threshold = float(warning_threshold) if warning_threshold else None
-            critical_threshold = float(critical_threshold) if critical_threshold else None
-        except ValueError:
-            flash('Invalid threshold values.', 'error')
-            return redirect(url_for('add_alert_threshold'))
-        
         db = get_db()
         cursor = db.cursor()
+        
         try:
-            cursor.execute("""
-                INSERT INTO alert_thresholds (device_id, interface_id, metric_type, warning_threshold, critical_threshold)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (device_id, interface_id, metric_type, warning_threshold, critical_threshold))
-            db.commit()
-            flash('Alert threshold created successfully.', 'success')
-            return redirect(url_for('alert_thresholds'))
+            # Availability-based alert (device down detection)
+            if device_id is not None and device_status == "down":
+                cursor.execute("""
+                    INSERT INTO alert_thresholds (device_id, device_status)
+                    VALUES (%s, %s)
+                """, (device_id, device_status))
+                db.commit()
+                flash('Availability alert threshold created successfully.', 'success')
+                return redirect(url_for('alert_thresholds'))
+            
+            # Usage-based alert (CPU, Memory, Disk, Interface Traffic)
+            elif device_id is not None and device_status is None:
+                # Validate input
+                if not all([device_id, metric_type]):
+                    flash('Device and metric type are required.', 'error')
+                    return redirect(url_for('add_alert_threshold'))
+                
+                # Convert to float if provided
+                try:
+                    warning_threshold = float(warning_threshold) if warning_threshold else None
+                    critical_threshold = float(critical_threshold) if critical_threshold else None
+                except ValueError:
+                    flash('Invalid threshold values.', 'error')
+                    return redirect(url_for('add_alert_threshold'))
+                
+                cursor.execute("""
+                    INSERT INTO alert_thresholds (device_id, interface_id, metric_type, warning_threshold, critical_threshold)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (device_id, interface_id, metric_type, warning_threshold, critical_threshold))
+                db.commit()
+                flash('Usage-based alert threshold created successfully.', 'success')
+                return redirect(url_for('alert_thresholds'))
+            
+            else:
+                flash('Invalid form submission. Please select a device.', 'error')
+                
+        except mysql.connector.IntegrityError as e:
+            db.rollback()
+            flash('Alert threshold already exists for this configuration.', 'error')
         except Exception as e:
             db.rollback()
-            flash('Error creating alert threshold.', 'error')
+            flash(f'Error creating alert threshold: {str(e)}', 'error')
         finally:
             cursor.close()
             db.close()
-    
+        
     # Get devices and interfaces for dropdowns
     db = get_db()
     cursor = db.cursor(dictionary=True)
@@ -1137,7 +1159,6 @@ def delete_alert_threshold(threshold_id):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("DELETE FROM alert_thresholds WHERE threshold_id = %s", (threshold_id,))
-    cursor.execute("DELETE FROM ")
     db.commit()
     flash('Alert threshold deleted successfully', "success")
     cursor.close()
