@@ -624,18 +624,21 @@ body {
 }
 
 .device-detail-brief.down{
-    background-color: rgba(239, 68, 68, 0.05);
+    background-color: rgba(139, 4, 4, 0.26);
 }
 .device-detail-brief.down:hover{
-    background-color: rgba(239, 68, 68, 0.1);
+    background-color: rgba(231, 74, 74, 0.596);
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
 }
 .device-detail-brief a:hover{
     color:darkblue;
 }
+.device-detail-brief.down a{
+    color: rgba(20, 1, 1, 0.801);
+}
 .device-detail-brief.down a:hover{
-    color:darkred;
+    color:red;
 }
 
 .medium-vendor-icon{

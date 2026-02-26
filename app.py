@@ -966,7 +966,80 @@ def delete_user(user_id):
     db.close()
     flash('User deleted successfuly', "success")
     return(redirect(url_for('users')))
+
+
+@app.route("/notifications/settings")
+@login_required
+def notifications_settings():
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT ns.*, u.username, u.email, u.role_id, r.role_name
+        FROM notification_settings ns
+        LEFT JOIN users u ON ns.user_id = u.user_id
+        LEFT JOIN roles r ON u.role_id = r.role_id
+    """)
+    n_settings = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    return render_template("notifications.html",n_settings=n_settings)
+
+@app.route("/notifications/add", methods=["GET", "POST"])
+@login_required
+def notification_add():
+    if current_user.role_name not in ['admin', 'operator']:
+        flash('Access denied. Admin or Operator privileges required.', 'error')
+        return redirect(url_for('notifications_settings'))
     
+    if request.method=="POST":
+        user_id = request.form.get('user_id')
+        alert_severity = request.form.get('severity')
+        email_enabled = request.form.get("method") == "email"
+
+        db = get_db()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("""SELECT user_id, alert_severity, email_enabled FROM notification_settings 
+            WHERE user_id=%s AND alert_severity=%s
+        """,(user_id,alert_severity),)
+        result=cursor.fetchone()
+        if result and result['email_enabled'] == email_enabled:
+            flash("Notifications settings already exists","error")
+            return redirect(url_for('notifications_settings'))
+        
+        cursor.execute("""
+            INSERT INTO notification_settings (user_id, alert_severity, email_enabled, created_at)
+            VALUES(%s, %s, %s, NOW())
+        """,(user_id,alert_severity,email_enabled))
+        db.commit()
+        flash('Notification settings added sucessfully.', 'success')
+        return redirect(url_for('notifications_settings'))
+    
+    db=get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * from users")
+    users=cursor.fetchall()
+    cursor.close()
+    db.close()
+    
+    return render_template('notification_add.html', users=users)
+
+@app.route("/notifications/<int:setting_id>/delete", methods=["POST"])
+@login_required
+def delete_notification(setting_id):
+    if current_user.role_name not in ['admin']:
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect(url_for('notifications_settings'))
+    
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM notification_settings WHERE setting_id = %s", (setting_id,))
+    db.commit()
+    flash('Notification deleted successfully', "success")
+    cursor.close()
+    db.close()
+
+    return(redirect(url_for('notifications_settings')))
 
 @app.route("/alerts/thresholds")
 @login_required

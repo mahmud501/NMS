@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}NMS - Notifications{% endblock %}
+
+{% block content %}
+<div class="gap"></div>
+<div class="notification_settings-container">
+    <div class="header-section">
+        <h2>User Management</h2>
+        <a href="/notifications/add" class="btn btn-primary">Add New Notifications</a>
+    </div>
+
+    <div class="notification_settings-table">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Severity</th>
+                    <th>Method</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for n_setting in n_settings %}
+                <tr>
+                    <td>{{ n_setting.username }}</td>
+                    <td>{{ n_setting.email }}</td>
+                    <td>
+                        <span class="badge badge-role-{{ n_setting.role_name }}">
+                            {{ n_setting.role_name|title }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge badge-severity-{{ n_setting.alert_severity}}">{{n_setting.alert_severity|title}}</span>
+                    </td>
+                    <td>
+                        {% if n_setting.email_enabled %}
+                            Email
+                        {% else %}
+                            SMS
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if current_user.role_name in ['admin', 'operator'] %}
+                        <button class="btn btn-sm btn-danger delete-notify-btn"
+                                data-notify-setting-id="{{ n_setting.setting_id }}"
+                                data-severity="{{ n_setting.alert_severity }}"
+                                data-username="{{ n_setting.username }}">Delete</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if not n_settings %}
+    <div class="no-notifications">
+        <p>No Notifications Settings found.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete User Modal -->
+<div class="modal fade" id="deleteNotifyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Notifications</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to Notifications <strong id="delete-notify"></strong>?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="delete-notify-form" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete Notification</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle delete user buttons
+    document.querySelectorAll('.delete-notify-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const notifySettingId = this.dataset.notifySettingId;
+            const severity = this.dataset.severity;
+            const username = this.dataset.username;
+
+
+            document.getElementById('delete-notify').textContent = `${username} with ${severity} severity`;
+            document.getElementById('delete-notify-form').action = `/notifications/${notifySettingId}/delete`;
+
+            const modal = new bootstrap.Modal(document.getElementById('deleteNotifyModal'));
+            modal.show();
+        });
+    });
+});
+</script>
+{% endblock %}

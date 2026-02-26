@@ -56,6 +56,10 @@
     background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     color: white; 
 }
+.badge-critical { 
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white; 
+}
 .badge-danger { 
     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
     color: white; 
@@ -102,7 +106,7 @@
 }
 
 /* users.html */
-.add-user-container { 
+.add-user-container, .add-notification-container { 
     display: flex; 
     justify-content: center; 
     padding: 20px;
@@ -112,10 +116,10 @@
     justify-content: center; 
     padding: 20px;
 }
-.users-container { 
+.users-container, .notification_settings-container { 
     padding: 20px; 
 }
-.users-table { 
+.users-table, .notification_settings-table { 
     background: white; 
     border-radius: 12px; 
     overflow: hidden; 
@@ -134,7 +138,19 @@
     background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
     color: white; 
 }
-.no-users { 
+.badge-severity-critical{
+   background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+   color: white;
+}
+.badge-severity-warning{
+   background: linear-gradient(135deg, #d9dc26 0%, #efb344 100%);
+   color: white;
+}
+.badge-severity-info{
+   background: linear-gradient(135deg, #2699dc 0%, #445eef 100%);
+   color: white;
+}
+.no-users, .no-notifications { 
     text-align: center; 
     padding: 40px; 
     color: #6b7280;
@@ -257,7 +273,7 @@
 }
 
 /* small helpers */
-.no-thresholds, .no-alerts, .no-users { 
+.no-thresholds, .no-alerts, .no-users, .no-notifications { 
     text-align: center; 
     padding: 40px; 
     color: #6b7280;
