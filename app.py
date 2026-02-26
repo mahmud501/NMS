@@ -64,6 +64,10 @@ def dashboard():
     devices = cursor.fetchall()
     cursor.execute("SELECT * FROM interfaces")
     interfaces = cursor.fetchall()
+    cursor.execute("SELECT * FROM alerts WHERE resolved_at is NULL")
+    alerts=cursor.fetchall()
+    cursor.execute("SELECT * FROM alert_thresholds")
+    alert_thresholds=cursor.fetchall()
 
     cursor.close()
     db.close()
@@ -93,11 +97,39 @@ def dashboard():
                 interfaces_pie[oper_status] +=1
         else:
             interfaces_pie["disabled"] +=1
+
+    alert = {
+        "Ok": 0,
+        "Fail":0,
+        "Delay":0,
+        "Suppress":0,
+        "Other":0
+    }
+    if alerts:
+        alerts_thresholdId= {a['threshold_id'] for a in alerts}
+        for a in alerts:
+            if a['ignored_at']:
+                if not a['ignore_until']:
+                    alert['Suppress'] +=1
+                elif ['ignore_until'] > datetime.now():
+                    alert['Delay'] +=1
+                else:
+                    continue
+                
+    if alerts and alert_thresholds:
+        for threshold in alert_thresholds:
+            if threshold['threshold_id'] in alerts_thresholdId:
+                alert['Fail'] +=1
+            else:
+                alert['Ok'] +=1
+            if not threshold['is_active']:
+                alert['Other'] +=1
+
     # device_pie = json.dumps(device_pie)
     # interfaces_pie = json.dumps(interfaces_pie)
 
     return render_template("dashboard.html", 
-                           devices=devices, interfaces=interfaces, 
+                           devices=devices, interfaces=interfaces, alerts=alert,
                            device_pie=device_pie, interfaces_pie=interfaces_pie
                            )
 
@@ -317,6 +349,7 @@ def device_health(device_id, health_type):
     cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM devices WHERE device_id=%s",(device_id,))
     device = cursor.fetchone()
+    device["formatted_uptime"]=format_time(device["uptime"])
     cursor.close()
     db.close()
 
