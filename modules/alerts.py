@@ -15,12 +15,13 @@ def check_alerts():
 
     # First, check for alerts that should be resolved (conditions back to normal)
     cursor.execute("""
-        SELECT a.alert_id, a.device_id, a.interface_id, a.alert_type, t.warning_threshold, t.critical_threshold
+        SELECT a.alert_id, a.device_id, a.interface_id, a.alert_type, t.warning_threshold, t.critical_threshold, d.ip_address
         FROM alerts a
         LEFT JOIN alert_thresholds t ON 
             a.device_id = t.device_id AND 
             COALESCE(a.interface_id, 0) = COALESCE(t.interface_id, 0) AND 
             a.alert_type = t.metric_type
+        LEFT JOIN devices d ON a.device_id=d.device_id
         WHERE a.resolved_at IS NULL
     """)
     unresolved_alerts = cursor.fetchall()
@@ -44,7 +45,7 @@ def check_alerts():
                 alert_data = {
                     'alert_id': alert_id,
                     'device_name': f'Device ID: {device_id} Alert ID:{alert_id}',
-                    'device_ip': threshold['ip_address'],
+                    'device_ip': alert['ip_address'],
                     'severity': severity,
                     'message': 'Alert Threshold Deleted',
                     'alert_type': metric_type,
@@ -71,9 +72,9 @@ def check_alerts():
                 alert_data = {
                     'alert_id': alert_id,
                     'device_name': f'{device_id}',
-                    'device_ip': threshold['ip_address'],
+                    'device_ip': alert['ip_address'],
                     'severity': severity,
-                    'message': f'{device_id} is Up',
+                    'message': f'{alert["ip_address"]} is Up',
                     'alert_type': metric_type,
                     'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 }
@@ -140,7 +141,7 @@ def check_alerts():
                     alert_data = {
                         'alert_id': alert_id,
                         'device_name': f'{device_id}',
-                        'device_ip': threshold['ip_address'],
+                        'device_ip': alert['ip_address'],
                         'severity': 'info',
                         'message': f'Condition returned to normal (value: {current_value})',
                         'alert_type': metric_type,

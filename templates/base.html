@@ -69,6 +69,10 @@
             </div>
 
             <div class="nav-right">
+                <div class="nav-search">
+                    <input type="text" id="device-search" placeholder="Search device (IP / hostname)">
+                    <div id="search-results" class="search-results"></div>
+                </div>
                 <ul class="nav-menu">
                     <li class="nav-item dropdown">
                         <a href="#">Profile
@@ -182,6 +186,42 @@
 
     // Initial check on page load (with a small delay)
     setTimeout(checkForNewAlerts, 2000);
+
+    const searchInput = document.getElementById('device-search');
+    const resultBox = document.getElementById('search-results');
+
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+
+        if (query.length<2) {
+            resultBox.innerHTML='';
+            return;
+        }
+        fetch(`/api/devices/search?q=${query}`)
+        .then(res => res.json())
+        .then(data => {
+            resultBox.innerHTML='';
+
+            data.forEach(device => {
+                const div = document.createElement('div');
+                div.className = 'search-item';
+                div.textContent = `${device.hostname} (${device.ip_address})`;
+                div.onclick = () => {
+                    window.location.href = `/devices/device/${device.device_id}`;
+                };
+                resultBox.appendChild(div);
+            });
+        });
+    });
+
+    document.addEventListener('click', function(e) {
+    if (!searchInput.contains(e.target) && !resultBox.contains(e.target)) {
+        resultBox.innerHTML = '';
+        searchInput.value = '';
+        searchInput.placeholder = 'Search device (IP / hostname)';
+        }
+    });
+    
     </script>
 
     <div class="container">

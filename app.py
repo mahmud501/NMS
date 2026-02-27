@@ -111,7 +111,7 @@ def dashboard():
             if a['ignored_at']:
                 if not a['ignore_until']:
                     alert['Suppress'] +=1
-                elif ['ignore_until'] > datetime.now():
+                elif a['ignore_until'] > datetime.now():
                     alert['Delay'] +=1
                 else:
                     continue
@@ -378,7 +378,7 @@ def device_alerts(device_id):
         FROM alerts a
         LEFT JOIN users u ON a.acknowledged_by = u.user_id
         LEFT JOIN roles r ON u.role_id = r.role_id
-        WHERE a.device_id = %s  /* AND resolved_at is NULL */
+        WHERE a.device_id = %s AND resolved_at is NULL 
         ORDER BY a.alert_id DESC
         LIMIT 100
     """, (device_id,))
@@ -546,6 +546,27 @@ def api_delete_device():
         db.close()
 
     return redirect(url_for("device_list", device_type="all"))
+
+
+@app.route("/api/devices/search")
+@login_required
+def search_devices():
+    query = request.args.get('q', '')
+    
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT device_id, hostname, ip_address
+        FROM devices
+        WHERE hostname LIKE %s OR ip_address LIKE %s
+        LIMIT 10
+    """,(f"%{query}%", f"%{query}%",))
+    devices = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    return jsonify(devices)
 
 @app.route("/ports/<interface_filter>")
 @login_required

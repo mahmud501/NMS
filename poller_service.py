@@ -35,20 +35,20 @@ def start_polling_service():
 
     while True:
         current_time = time.time()
-        if current_time - last_availability_poll >= 300:  # 5 minutes
+        if current_time - last_availability_poll >= 180:  # 5 minutes
             try:
                 poll_device_availability()
             except Exception as e:
                 print(f"Error during availability polling: {e}")
             last_availability_poll = current_time
-        if current_time - last_health_poll >= 300:
+        if current_time - last_health_poll >= 180:
             try:
                 poll_device_health()
             except Exception as e:
                 print(f"Error during health polling: {e}")
             last_health_poll = current_time
 
-        if current_time - last_arp_poll >= 600: 
+        if current_time - last_arp_poll >= 420: 
             try:
                 poll_arp()
             except Exception as e:
@@ -61,7 +61,7 @@ def start_polling_service():
                 print(f"Error during CDP polling: {e}")
             last_cdp_poll = current_time
 
-        if current_time - last_interface_poll >= 300:
+        if current_time - last_interface_poll >= 180:
             try:
                 poll_interfaces()
             except Exception as e:
@@ -75,7 +75,7 @@ def start_polling_service():
             except Exception as e:
                 print(f"Error during alert checking: {e}")
             
-        time.sleep(60) # Sleep for 1 minute between checks
+        time.sleep(30) # Sleep for 1 minute between checks
 
 if __name__ == "__main__":
     # Run once for testing

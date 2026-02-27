@@ -24,7 +24,7 @@ if alerts:
         if a['ignored_at']:
             if not a['ignore_until']:
                 alert['Suppress'] +=1
-            elif ['ignore_until'] > datetime.now():
+            elif a['ignore_until'] > datetime.now():
                 alert['Delay'] +=1
             else:
                 continue
