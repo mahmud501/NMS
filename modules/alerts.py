@@ -48,7 +48,7 @@ def check_alerts():
                     'device_ip': alert['ip_address'],
                     'severity': severity,
                     'message': 'Alert Threshold Deleted',
-                    'alert_type': metric_type,
+                    'alert_type': f'{metric_type} - resolved',
                     'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 }
                 alerts_generated.append(alert_data)
@@ -75,7 +75,7 @@ def check_alerts():
                     'device_ip': alert['ip_address'],
                     'severity': severity,
                     'message': f'{alert["ip_address"]} is Up',
-                    'alert_type': metric_type,
+                    'alert_type': f'{metric_type} - resolved',
                     'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 }
                 alerts_generated.append(alert_data)
@@ -144,7 +144,7 @@ def check_alerts():
                         'device_ip': alert['ip_address'],
                         'severity': 'info',
                         'message': f'Condition returned to normal (value: {current_value})',
-                        'alert_type': metric_type,
+                        'alert_type': f'{metric_type} - resolved',
                         'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     }
                     alerts_generated.append(alert_data)

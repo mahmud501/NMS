@@ -134,11 +134,15 @@
     <div class="chart-container">
         <canvas id="interfacePieChart"></canvas>
     </div>
+    <div class="chart-container">
+        <canvas id="alertPieChart"></canvas>
+    </div>
 </div>
 
 <script>
     const device_Data = {{ device_pie | tojson }}
     const interface_Data = {{ interfaces_pie | tojson }}
+    const alert_data = {{ alerts | tojson }}
 
     new Chart(document.getElementById('devicePieChart'),{
         type: 'pie',
@@ -186,6 +190,33 @@
                 title:{
                     display: true,
                     text: 'Interfaces'
+                }
+            }
+        }
+    });
+    new Chart(document.getElementById('alertPieChart'), {
+        type: 'pie',
+        data:{
+            labels: ["OK", "Fail", "Suppress", "Delay", "Others"],
+            datasets: [{
+                data:[
+                    alert_data.Ok,
+                    alert_data.Fail,
+                    alert_data.Suppress,
+                    alert_data.Delay,
+                    alert_data.Other
+                ]
+            }]
+        },
+        options:{
+            responsive: true,
+            plugins:{
+                legend:{
+                    position: 'top'
+                },
+                title:{
+                    display: true,
+                    text: 'Alerts'
                 }
             }
         }

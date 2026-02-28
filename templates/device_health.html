@@ -19,12 +19,12 @@
     </div>
     <div class="device-graph-brief-1">
         <div style="max-height: 100%">
+            <span style="text-align: center;">Memory usage</span>
             <canvas id="deviceMemoryChart"></canvas>
-            <p style="text-align: center;">Memory usage</p>
         </div>
         <div>
+            <span style="text-align: center;">CPU usage</span>
             <canvas id="deviceCpuChart"></canvas>
-            <p style="text-align: center;">CPU usage</p>
         </div>
     </div>
 </div>
@@ -64,9 +64,9 @@
                     <div class="dropdown-content">
                         <a href="/devices/device/{{device.device_id}}/ports">Details</a>
                         <hr>
-                        <a href="#">IP Address</a>
-                        <a href="#">ARP Table</a>
-                        <a href="#">Neighbours</a>
+                        <a href="/devices/device/{{device.device_id}}/ports/ip">IP Address</a>
+                        <a href="/devices/device/{{device.device_id}}/ports/arp">ARP Table</a>
+                        <a href="/devices/device/{{device.device_id}}/ports/neighbors">Neighbours</a>
                     </div>
                 </a>
             </li>

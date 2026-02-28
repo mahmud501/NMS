@@ -713,6 +713,41 @@ def device_memory(device_id):
 
     return jsonify(data)
 
+@app.route("/api/device/<int:device_id>/storage")
+@login_required
+def device_storage(device_id):
+    # Get time frame from query parameters, default to 1 day
+    time_frame = request.args.get('time', '1d')
+    
+    # Convert time frame to MySQL INTERVAL
+    time_intervals = {
+        '1h': 'INTERVAL 1 HOUR',
+        '6h': 'INTERVAL 6 HOUR', 
+        '1d': 'INTERVAL 1 DAY',
+        '7d': 'INTERVAL 7 DAY',
+        '30d': 'INTERVAL 30 DAY'
+    }
+    
+    interval = time_intervals.get(time_frame, 'INTERVAL 1 DAY')
+    
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute(f"""
+        SELECT UNIX_TIMESTAMP(timestamp) * 1000 AS ts,
+            disk_usage_pct AS storage_use
+        FROM device_health
+        WHERE device_id=%s AND timestamp >= NOW() - {interval}
+        ORDER BY timestamp
+    """,(device_id,))
+    result=cursor.fetchall()
+    data = {
+        "labels": [r["ts"] for r in result],
+        "storage": [r["storage_use"] for r in result]
+    }
+
+    return jsonify(data)
+
+
 @app.route("/api/device/<int:device_id>/availability")
 @login_required
 def device_availability(device_id):

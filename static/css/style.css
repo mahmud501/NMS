@@ -624,8 +624,9 @@ body {
 .device-detail-brief.up,
 .device-detail-brief.down{
     display: flex;
+    align-items: stretch;
     width: 100%;
-    height: 90px;
+    height: 100px;
     background: var(--surface);
     text-align: center;
     justify-content: start;
@@ -643,7 +644,7 @@ body {
     background-color: var(--surface);
 }
 .device-detail-brief.up:hover{
-    background: linear-gradient(135deg, #f8fafc 0%, #f0f4f8 100%);
+    background: linear-gradient(135deg, #53a0ec 0%, #f9f9fa 100%);
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
 }
@@ -688,8 +689,15 @@ body {
 
 .device-graph-brief-1{
     display: flex;
-    width: 46.5%;
+    gap: 10px;
+    height: 70px;
     justify-content: end;
+}
+.device-graph-brief-1 > div{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .device-detail-nav-1{

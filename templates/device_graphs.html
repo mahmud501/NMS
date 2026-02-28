@@ -19,12 +19,12 @@
     </div>
     <div class="device-graph-brief-1">
         <div style="max-height: 100%">
+            <span style="text-align: center;">Memory usage</span>
             <canvas id="deviceMemoryChart"></canvas>
-            <p style="text-align: center;">Memory usage</p>
         </div>
         <div>
+            <span style="text-align: center;">CPU usage</span>
             <canvas id="deviceCpuChart"></canvas>
-            <p style="text-align: center;">CPU usage</p>
         </div>
     </div>
 </div>
@@ -64,9 +64,9 @@
                     <div class="dropdown-content">
                         <a href="/devices/device/{{device.device_id}}/ports">Details</a>
                         <hr>
-                        <a href="#">IP Address</a>
-                        <a href="#">ARP Table</a>
-                        <a href="#">Neighbours</a>
+                        <a href="/devices/device/{{device.device_id}}/ports/ip">IP Address</a>
+                        <a href="/devices/device/{{device.device_id}}/ports/arp">ARP Table</a>
+                        <a href="/devices/device/{{device.device_id}}/ports/neighbors">Neighbours</a>
                     </div>
                 </a>
             </li>
@@ -479,49 +479,52 @@ function updateGraph(timeFrame = '1d') {
         });
     });
     {% elif graph_type == 'storage' %}
-    // For storage, we'll show a placeholder since we don't have storage data yet
-    if (currentChart) {
-        currentChart.destroy();
-    }
+    fetch(`/api/device/{{ device.device_id }}/storage?time=${timeFrame}`)
+    .then(res => res.json())
+    .then(data => {
+        if (currentChart) {
+            currentChart.destroy();
+        }
     
-    const ctx = document.getElementById("storageGraph").getContext("2d");
-    currentChart = new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: [],
-            datasets: [{
-                label: "Storage Usage %",
-                data: [],
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 0,
-                borderColor: 'rgba(153, 102, 255, 1)',
-                backgroundColor: 'rgba(153, 102, 255, 0.2)'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    type: "time",
-                    time: {
-                        unit: "hour",
-                        stepSize: 3
-                    }
-                },
-                y: {
-                    min: 0,
-                    max: 100,
-                    ticks: {
-                        callback: function(value) {
-                            return value + '%';
+        const ctx = document.getElementById("storageGraph").getContext("2d");
+        currentChart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: "Storage Usage %",
+                    data: data.storage,
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: "time",
+                        time: {
+                            unit: "hour",
+                            stepSize: 3
+                        }
+                    },
+                    y: {
+                        min: 0,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
                         }
                     }
                 }
             }
-        }
+        });
     });
     {% endif %}
 }
