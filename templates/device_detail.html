@@ -70,7 +70,8 @@
                 </div>
             </li>
             <li>
-                <a href="/devices/device/{{device.device_id}}/alerts"><img src="/static/images/notification.png">Alerts</a>
+                <a href="/devices/device/{{device.device_id}}/alerts"><img
+                        src="/static/images/notification.png">Alerts</a>
             </li>
         </ul>
     </div>
@@ -84,13 +85,13 @@
                     <hr>
                     <a href="#">Ignore</a>
                     {% if current_user.role_name == 'admin' %}
-                        <a href="/device/delete">Delete Device</a>
+                    <a href="/device/delete">Delete Device</a>
                     {% endif %}
                 </div>
             </li>
         </ul>
     </div>
-    
+
 </div>
 <div class="device-details-1">
     <div class="device-detail-info-1">
@@ -100,75 +101,75 @@
                 <th></th>
             </tr>
             {% if device.sys_description|lower!='none'%}
-                <tr>
-                    <td colspan="2">{{device.sys_description}}</td>
-                </tr>
+            <tr>
+                <td colspan="2">{{device.sys_description}}</td>
+            </tr>
             {% endif %}
             {% if device.description|lower!='none'%}
-                <tr>
-                    <td>Description</td>
-                    <td>{{device.description}}</td>
-                </tr>
+            <tr>
+                <td>Description</td>
+                <td>{{device.description}}</td>
+            </tr>
             {% endif %}
-             {% if device.model|lower!='none'%}
-                <tr>
-                    <td>Model/Hardware</td>
-                    <td>{{device.model}}</td>
-                </tr>
+            {% if device.model|lower!='none'%}
+            <tr>
+                <td>Model/Hardware</td>
+                <td>{{device.model}}</td>
+            </tr>
             {% endif %}
-             {% if device.vendor|lower!='none'%}
-                <tr>
-                    <td>Vendor</td>
-                    <td>{{device.vendor}}</td>
-                </tr>
+            {% if device.vendor|lower!='none'%}
+            <tr>
+                <td>Vendor</td>
+                <td>{{device.vendor}}</td>
+            </tr>
             {% endif %}
-             {% if device.os_version|lower!='none'%}
-                <tr>
-                    <td>Operating System</td>
-                    <td>{{device.os_version}}</td>
-                </tr>
+            {% if device.os_version|lower!='none'%}
+            <tr>
+                <td>Operating System</td>
+                <td>{{device.os_version}}</td>
+            </tr>
             {% endif %}
-             {% if device.hostname|lower!='none'%}
-                <tr>
-                    <td>System Name</td>
-                    <td>{{device.hostname}}</td>
-                </tr>
+            {% if device.hostname|lower!='none'%}
+            <tr>
+                <td>System Name</td>
+                <td>{{device.hostname}}</td>
+            </tr>
             {% endif %}
-             {% if device.ip_address|lower!='none'%}
-                <tr>
-                    <td>Cached IP/IP Address</td>
-                    <td>{{device.ip_address}}</td>
-                </tr>
+            {% if device.ip_address|lower!='none'%}
+            <tr>
+                <td>Cached IP/IP Address</td>
+                <td>{{device.ip_address}}</td>
+            </tr>
             {% endif %}
-             {% if device.location|lower!='none'%}
-                <tr>
-                    <td>Location</td>
-                    <td>{{device.location}}</td>
-                </tr>
+            {% if device.location|lower!='none'%}
+            <tr>
+                <td>Location</td>
+                <td>{{device.location}}</td>
+            </tr>
             {% endif %}
-             {% if device.serial_number|lower!='none'%}
-                <tr>
-                    <td>Serial</td>
-                    <td>{{device.serial_number}}</td>
-                </tr>
+            {% if device.serial_number|lower!='none'%}
+            <tr>
+                <td>Serial</td>
+                <td>{{device.serial_number}}</td>
+            </tr>
             {% endif %}
-             {% if device.uptime|lower!='none'%}
-                <tr>
-                    <td>Uptime</td>
-                    <td>{{device.formatted_uptime}}</td>
-                </tr>
+            {% if device.uptime|lower!='none'%}
+            <tr>
+                <td>Uptime</td>
+                <td>{{device.formatted_uptime}}</td>
+            </tr>
             {% endif %}
             {% if device.last_reboot_time|lower != 'none' %}
-                <tr>
-                    <td>Last Reboot</td>
-                    <td>{{device.last_reboot_time}}</td>
-                </tr>
+            <tr>
+                <td>Last Reboot</td>
+                <td>{{device.last_reboot_time}}</td>
+            </tr>
             {% endif %}
             {% if device.last_polled_time|lower != 'none' %}
-                <tr>
-                    <td>Last Polled</td>
-                    <td>{{device.last_polled_time}}</td>
-                </tr>
+            <tr>
+                <td>Last Polled</td>
+                <td>{{device.last_polled_time}}</td>
+            </tr>
             {% endif %}
         </table>
     </div>
@@ -193,28 +194,30 @@
                     <img src="/static/images/ethernet-port.png"> {{interfaces|length}}
                 </td>
                 <td>
-                    <img src="/static/images/green tick.png"> 
+                    <img src="/static/images/green tick.png">
                     {{interfaces | map(attribute="oper_status") | map("lower") | select("equalto","up") | list| length}}
                 </td>
                 <td>
-                    <img src="/static/images/red- minus.png"> 
-                    {{interfaces | selectattr("oper_status", "==", "down") | selectattr("admin_status", "==", "up") | list | length}}
+                    <img src="/static/images/red- minus.png">
+                    {{interfaces | selectattr("oper_status", "==", "down") | selectattr("admin_status", "==", "up") |
+                    list | length}}
                 </td>
                 <td>
-                    <img src="/static/images/gray minus.png"> 
-                    {{interfaces | map(attribute="admin_status") | map("lower") | select("equalto","down") | list| length}}
+                    <img src="/static/images/gray minus.png">
+                    {{interfaces | map(attribute="admin_status") | map("lower") | select("equalto","down") | list|
+                    length}}
                 </td>
             </tr>
             <tr>
                 <td colspan="4">
                     {% for interface in interfaces %}
-                        <a href="/devices/device/{{device.device_id}}/interface/{{interface.interface_id}}" class="interface-link 
+                    <a href="/devices/device/{{device.device_id}}/interface/{{interface.interface_id}}" class="interface-link 
                             {% if interface.oper_status == 'up' %}up
                             {% elif interface.admin_status == 'down' %}admin-down
                             {% elif interface.oper_status == 'down' %}oper-down
                             {% else %}default{% endif %}">
-                            {{ interface.name }},
-                         </a>
+                        {{ interface.name }},
+                    </a>
                     {% endfor %}
                 </td>
             </tr>
@@ -223,192 +226,195 @@
 </div>
 
 <script>
-fetch("/api/device/{{ device.device_id }}/memory")
-  .then(res => res.json())
-  .then(data => {
-    const ctx = document.getElementById("deviceMemoryChart").getContext("2d");
+    fetch("/api/device/{{ device.device_id }}/memory")
+        .then(res => res.json())
+        .then(data => {
+            const ctx = document.getElementById("deviceMemoryChart").getContext("2d");
 
-    new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: data.labels,
-        datasets: [{
-          data: data.memory,
-          borderWidth: 2,
-          fill: true,               
-          tension: 0.3,
-          pointRadius: 0,
-          pointHoverRadius: 0,
-          hitRadius: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.memory,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        pointHoverRadius: 0,
+                        hitRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
 
-        events: [],
-        hover: { mode: null },
-        interaction: { mode: null },
+                    events: [],
+                    hover: { mode: null },
+                    interaction: { mode: null },
 
-        plugins: {
-          legend: { display: false },
-          tooltip: { enabled: false }
-        },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
 
-        scales: {
-          x: {
-            type: "time",
-            ticks: { display: false },
-            grid: { display: false },
-            border: { display: false },
-            title: { display: false }
-          },
-          y: {
-            min: 0,
-            max: 100,
-            ticks: { display: false },
-            grid: { display: false },
-            border: { display: false },
-            title: { display: false }
-          }
-        },
+                    scales: {
+                        x: {
+                            type: "time",
+                            ticks: { display: false },
+                            grid: { display: false },
+                            border: { display: false },
+                            title: { display: false }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: { display: false },
+                            grid: { display: false },
+                            border: { display: false },
+                            title: { display: false }
+                        }
+                    },
 
-        animation: false,
+                    animation: false,
 
-        elements: {
-          line: {
-            borderJoinStyle: 'round'
-          }
-        }
-      }
-    });
-});
-
-fetch("/api/device/{{ device.device_id }}/cpu")
-  .then(res => res.json())
-  .then(data => {
-    const ctx = document.getElementById("deviceCpuChart").getContext("2d");
-
-    new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: data.labels,
-        datasets: [{
-          data: data.cpu,
-          borderWidth: 2,
-          fill: true,               
-          tension: 0.3,
-          pointRadius: 0,
-          pointHoverRadius: 0,
-          hitRadius: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-
-        events: [],
-        hover: { mode: null },
-        interaction: { mode: null },
-
-        plugins: {
-          legend: { display: false },
-          tooltip: { enabled: false }
-        },
-
-        scales: {
-          x: {
-            type: "time",
-            ticks: { display: false },
-            grid: { display: false },
-            border: { display: false },
-            title: { display: false }
-          },
-          y: {
-            min: 0,
-            max: 100,
-            ticks: { display: false },
-            grid: { display: false },
-            border: { display: false },
-            title: { display: false }
-          }
-        },
-
-        animation: false,
-
-        elements: {
-          line: {
-            borderJoinStyle: 'round'
-          }
-        }
-      }
-    });
-});
-
-fetch("/api/device/{{ device.device_id }}/throughput")
-.then(res => res.json())
-.then(data => {
-
-  const ctx = document.getElementById("deviceThroughput").getContext("2d");
-
-  new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: data.labels,
-      datasets: [
-        {
-          label: "In",
-          data: data.in,
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 0
-        },
-        {
-          label: "Out",
-          data: data.out,
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 0
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        mode: "index",
-        intersect: false
-      },
-      scales: {
-        x: {
-          type: "time",
-          time: {
-            unit: "hour",
-            stepSize: 3
-            
-          }
-        },
-        y: {
-          ticks: {
-                callback: function(value) {
-                const abs = Math.abs(value);
-                
-                if (abs >= 1e9) {
-                    return (value / 1e9).toFixed(2) + ' Gbps';
+                    elements: {
+                        line: {
+                            borderJoinStyle: 'round'
+                        }
+                    }
                 }
-                if (abs >= 1e6) {
-                    return (value / 1e6).toFixed(1) + ' Mbps';
-                }
-                return (value / 1e3).toFixed(0) + ' kbps';
-                }
-            }
-        }
-      }
-    }
-  });
+            });
+        });
 
-});
+    fetch("/api/device/{{ device.device_id }}/cpu")
+        .then(res => res.json())
+        .then(data => {
+            const ctx = document.getElementById("deviceCpuChart").getContext("2d");
+
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.cpu,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        pointHoverRadius: 0,
+                        hitRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+
+                    events: [],
+                    hover: { mode: null },
+                    interaction: { mode: null },
+
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
+
+                    scales: {
+                        x: {
+                            type: "time",
+                            ticks: { display: false },
+                            grid: { display: false },
+                            border: { display: false },
+                            title: { display: false }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: { display: false },
+                            grid: { display: false },
+                            border: { display: false },
+                            title: { display: false }
+                        }
+                    },
+
+                    animation: false,
+
+                    elements: {
+                        line: {
+                            borderJoinStyle: 'round'
+                        }
+                    }
+                }
+            });
+        });
+
+    fetch("/api/device/{{ device.device_id }}/throughput")
+        .then(res => res.json())
+        .then(data => {
+
+            const ctx = document.getElementById("deviceThroughput").getContext("2d");
+
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: "In",
+                            data: data.in,
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0
+                        },
+                        {
+                            label: "Out",
+                            data: data.out,
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: "index",
+                        intersect: false
+                    },
+                    scales: {
+                        x: {
+                            type: "time",
+                            time: {
+                                unit: "hour",
+                                stepSize: window.innerWidth < 768 ? 6 : 3,
+                                displayFormats: {
+                                    hour: 'dd-MM-yy HH:mm'
+                                },
+                                tooltipFormat: 'MMM d, yyyy HH:mm'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                callback: function (value) {
+                                    const abs = Math.abs(value);
+
+                                    if (abs >= 1e9) {
+                                        return (value / 1e9).toFixed(2) + ' Gbps';
+                                    }
+                                    if (abs >= 1e6) {
+                                        return (value / 1e6).toFixed(1) + ' Mbps';
+                                    }
+                                    return (value / 1e3).toFixed(0) + ' kbps';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+        });
 </script>
 {% endblock %}

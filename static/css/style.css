@@ -863,7 +863,7 @@ body {
 }
 
 .graph-chart-large {
-    height: 400px;
+    min-height: 400px;
     margin-top: 20px;
 }
 
@@ -1784,6 +1784,7 @@ a:hover {
 /* System Graphs Grid */
 .system-graphs-grid {
     display: grid;
+    /* grid-template-rows: auto auto; */
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
     gap: 20px;
     width: 100%;
@@ -2041,7 +2042,7 @@ a:hover {
 .traffic-value {
     font-weight: 600;
     font-size: 14px;
-    color: #fff;
+    color: #333;
 }
 
 /* Traffic Graphs Container */

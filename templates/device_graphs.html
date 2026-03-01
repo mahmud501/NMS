@@ -71,7 +71,8 @@
                 </a>
             </li>
             <li>
-                <a href="/devices/device/{{device.device_id}}/alerts"><img src="/static/images/notification.png">Alerts</a>
+                <a href="/devices/device/{{device.device_id}}/alerts"><img
+                        src="/static/images/notification.png">Alerts</a>
             </li>
         </ul>
     </div>
@@ -85,7 +86,7 @@
                     <hr>
                     <a href="#">Ignore</a>
                     {% if current_user.role_name == 'admin' %}
-                        <a href="/device/delete">Delete Device</a>
+                    <a href="/device/delete">Delete Device</a>
                     {% endif %}
                 </div>
             </li>
@@ -112,432 +113,484 @@
     </div>
     <div class="graph-chart-large">
         {% if graph_type == 'system' %}
-            <div class="system-graphs-grid">
-                <div class="system-graph-item">
-                    <h4>Network Throughput</h4>
-                    <canvas id="throughputGraph"></canvas>
-                </div>
-                <div class="system-graph-item">
-                    <h4>Device Availability</h4>
-                    <canvas id="availabilityGraph"></canvas>
-                </div>
-                <!-- <div class="system-graph-item">
+        <div class="system-graphs-grid">
+            <div class="system-graph-item">
+                <h4>Network Throughput</h4>
+                <canvas id="throughputGraph"></canvas>
+            </div>
+            <div class="system-graph-item">
+                <h4>Device Availability</h4>
+                <canvas id="availabilityGraph"></canvas>
+            </div>
+            <!-- <div class="system-graph-item">
                     <h4>Device Uptime</h4>
                     <canvas id="uptimeGraph"></canvas>
                 </div> -->
-            </div>
+        </div>
         {% elif graph_type == 'processor' %}
-            <canvas id="processorGraph"></canvas>
+        <canvas id="processorGraph"></canvas>
         {% elif graph_type == 'memory' %}
-            <canvas id="memoryGraph"></canvas>
+        <canvas id="memoryGraph"></canvas>
         {% elif graph_type == 'storage' %}
-            <canvas id="storageGraph"></canvas>
+        <canvas id="storageGraph"></canvas>
         {% endif %}
     </div>
 </div>
 
 <script>
-// Memory chart for brief
-fetch("/api/device/{{ device.device_id }}/memory")
-  .then(res => res.json())
-  .then(data => {
-    const ctx = document.getElementById("deviceMemoryChart").getContext("2d");
+    // Memory chart for brief
+    fetch("/api/device/{{ device.device_id }}/memory")
+        .then(res => res.json())
+        .then(data => {
+            const ctx = document.getElementById("deviceMemoryChart").getContext("2d");
 
-    new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: data.labels,
-        datasets: [{
-          data: data.memory,
-          borderWidth: 2,
-          fill: true,
-          tension: 0.3,
-          pointRadius: 0,
-          pointHoverRadius: 0,
-          hitRadius: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        events: [],
-        hover: { mode: null },
-        interaction: { mode: null },
-        plugins: {
-          legend: { display: false },
-          tooltip: { enabled: false }
-        },
-        scales: {
-          x: {
-            type: "time",
-            ticks: { display: false },
-            grid: { display: false },
-            border: { display: false },
-            title: { display: false }
-          },
-          y: {
-            min: 0,
-            max: 100,
-            ticks: { display: false },
-            grid: { display: false },
-            border: { display: false },
-            title: { display: false }
-          }
-        },
-        animation: false,
-        elements: {
-          line: {
-            borderJoinStyle: 'round'
-          }
-        }
-      }
-    });
-});
-
-// CPU chart for brief
-fetch("/api/device/{{ device.device_id }}/cpu")
-  .then(res => res.json())
-  .then(data => {
-    const ctx = document.getElementById("deviceCpuChart").getContext("2d");
-
-    new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: data.labels,
-        datasets: [{
-          data: data.cpu,
-          borderWidth: 2,
-          fill: true,
-          tension: 0.3,
-          pointRadius: 0,
-          pointHoverRadius: 0,
-          hitRadius: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        events: [],
-        hover: { mode: null },
-        interaction: { mode: null },
-        plugins: {
-          legend: { display: false },
-          tooltip: { enabled: false }
-        },
-        scales: {
-          x: {
-            type: "time",
-            ticks: { display: false },
-            grid: { display: false },
-            border: { display: false },
-            title: { display: false }
-          },
-          y: {
-            min: 0,
-            max: 100,
-            ticks: { display: false },
-            grid: { display: false },
-            border: { display: false },
-            title: { display: false }
-          }
-        },
-        animation: false,
-        elements: {
-          line: {
-            borderJoinStyle: 'round'
-          }
-        }
-      }
-    });
-});
-
-// Main graph based on type
-let currentThroughputChart = null;
-let currentAvailabilityChart = null;
-let currentUptimeChart = null;
-let currentChart = null;
-let currentTimeFrame = '1d';
-
-function updateGraph(timeFrame = '1d') {
-    currentTimeFrame = timeFrame;
-    
-    {% if graph_type == 'system' %}
-    // Update throughput graph
-    fetch(`/api/device/{{ device.device_id }}/throughput?time=${timeFrame}`)
-    .then(res => res.json())
-    .then(data => {
-        if (currentThroughputChart) {
-            currentThroughputChart.destroy();
-        }
-        
-        const ctx = document.getElementById("throughputGraph").getContext("2d");
-        currentThroughputChart = new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: data.labels,
-                datasets: [
-                    {
-                        label: "In",
-                        data: data.in,
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.memory,
                         borderWidth: 2,
                         fill: true,
-                        tension: 0.4,
+                        tension: 0.3,
                         pointRadius: 0,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)'
-                    },
-                    {
-                        label: "Out",
-                        data: data.out,
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 0,
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: "index",
-                    intersect: false
+                        pointHoverRadius: 0,
+                        hitRadius: 0
+                    }]
                 },
-                scales: {
-                    x: {
-                        type: "time",
-                        time: {
-                            unit: "hour",
-                            stepSize: 3
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    events: [],
+                    hover: { mode: null },
+                    interaction: { mode: null },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
+                    scales: {
+                        x: {
+                            type: "time",
+                            ticks: { display: false },
+                            grid: { display: false },
+                            border: { display: false },
+                            title: { display: false }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: { display: false },
+                            grid: { display: false },
+                            border: { display: false },
+                            title: { display: false }
                         }
                     },
-                    y: {
-                        ticks: {
-                            callback: function(value) {
-                                const abs = Math.abs(value);
-                                if (abs >= 1e9) {
-                                    return (value / 1e9).toFixed(2) + ' Gbps';
+                    animation: false,
+                    elements: {
+                        line: {
+                            borderJoinStyle: 'round'
+                        }
+                    }
+                }
+            });
+        });
+
+    // CPU chart for brief
+    fetch("/api/device/{{ device.device_id }}/cpu")
+        .then(res => res.json())
+        .then(data => {
+            const ctx = document.getElementById("deviceCpuChart").getContext("2d");
+
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.cpu,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        pointHoverRadius: 0,
+                        hitRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    events: [],
+                    hover: { mode: null },
+                    interaction: { mode: null },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
+                    scales: {
+                        x: {
+                            type: "time",
+                            ticks: { display: false },
+                            grid: { display: false },
+                            border: { display: false },
+                            title: { display: false }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: { display: false },
+                            grid: { display: false },
+                            border: { display: false },
+                            title: { display: false }
+                        }
+                    },
+                    animation: false,
+                    elements: {
+                        line: {
+                            borderJoinStyle: 'round'
+                        }
+                    }
+                }
+            });
+        });
+
+    // Main graph based on type
+    let currentThroughputChart = null;
+    let currentAvailabilityChart = null;
+    let currentUptimeChart = null;
+    let currentChart = null;
+    let currentTimeFrame = '1d';
+
+    function updateGraph(timeFrame = '1d') {
+        currentTimeFrame = timeFrame;
+
+        const timeConfig = getTimeConfig(timeFrame);
+
+        {% if graph_type == 'system' %}
+        // Update throughput graph
+        fetch(`/api/device/{{ device.device_id }}/throughput?time=${timeFrame}`)
+            .then(res => res.json())
+            .then(data => {
+                if (currentThroughputChart) {
+                    currentThroughputChart.destroy();
+                }
+
+                const ctx = document.getElementById("throughputGraph").getContext("2d");
+                currentThroughputChart = new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            {
+                                label: "In",
+                                data: data.in,
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 0,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)'
+                            },
+                            {
+                                label: "Out",
+                                data: data.out,
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 0,
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: "index",
+                            intersect: false
+                        },
+                        scales: {
+                            x: {
+                                type: "time",
+                                time: {
+                                    unit: timeConfig.unit,
+                                    stepSize: timeConfig.stepSize,
+                                    displayFormats: {
+                                        minute: 'HH:mm',
+                                        hour: 'MMM d HH:mm',
+                                        day: 'MMM d'
+                                    },
+                                    tooltipFormat: 'MMM d, yyyy HH:mm'
                                 }
-                                if (abs >= 1e6) {
-                                    return (value / 1e6).toFixed(1) + ' Mbps';
+                            },
+                            y: {
+                                ticks: {
+                                    callback: function (value) {
+                                        const abs = Math.abs(value);
+                                        if (abs >= 1e9) {
+                                            return (value / 1e9).toFixed(2) + ' Gbps';
+                                        }
+                                        if (abs >= 1e6) {
+                                            return (value / 1e6).toFixed(1) + ' Mbps';
+                                        }
+                                        return (value / 1e3).toFixed(0) + ' kbps';
+                                    }
                                 }
-                                return (value / 1e3).toFixed(0) + ' kbps';
                             }
                         }
                     }
+                });
+            });
+
+        // Update availability graph
+        fetch(`/api/device/{{ device.device_id }}/availability?time=${timeFrame}`)
+            .then(res => res.json())
+            .then(data => {
+                if (currentAvailabilityChart) {
+                    currentAvailabilityChart.destroy();
                 }
-            }
-        });
+
+                const ctx = document.getElementById("availabilityGraph").getContext("2d");
+                currentAvailabilityChart = new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: "Availability",
+                            data: data.availability,
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            stepped: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: "time",
+                                time: {
+                                    unit: timeConfig.unit,
+                                    stepSize: timeConfig.stepSize,
+                                    displayFormats: {
+                                        minute: 'HH:mm',
+                                        hour: 'MMM d HH:mm',
+                                        day: 'MMM d'
+                                    },
+                                    tooltipFormat: 'MMM d, yyyy HH:mm'
+                                }
+                            },
+                            y: {
+                                min: 0,
+                                max: 1,
+                                ticks: {
+                                    callback: function (value) {
+                                        return value === 1 ? 'Up' : value === 0 ? 'Down' : '';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+
+        {% elif graph_type == 'processor' %}
+        fetch(`/api/device/{{ device.device_id }}/cpu?time=${timeFrame}`)
+            .then(res => res.json())
+            .then(data => {
+                if (currentChart) {
+                    currentChart.destroy();
+                }
+
+                const ctx = document.getElementById("processorGraph").getContext("2d");
+                currentChart = new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: "CPU Usage %",
+                            data: data.cpu,
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            borderColor: 'rgba(255, 159, 64, 1)',
+                            backgroundColor: 'rgba(255, 159, 64, 0.2)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: "time",
+                                time: {
+                                    unit: timeConfig.unit,
+                                    stepSize: timeConfig.stepSize,
+                                    displayFormats: {
+                                        minute: 'HH:mm',
+                                        hour: 'MMM d HH:mm',
+                                        day: 'MMM d'
+                                    },
+                                    tooltipFormat: 'MMM d, yyyy HH:mm'
+                                }
+                            },
+                            y: {
+                                min: 0,
+                                max: 100,
+                                ticks: {
+                                    callback: function (value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        {% elif graph_type == 'memory' %}
+        fetch(`/api/device/{{ device.device_id }}/memory?time=${timeFrame}`)
+            .then(res => res.json())
+            .then(data => {
+                if (currentChart) {
+                    currentChart.destroy();
+                }
+
+                const ctx = document.getElementById("memoryGraph").getContext("2d");
+                currentChart = new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: "Memory Usage %",
+                            data: data.memory,
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: "time",
+                                time: {
+                                    unit: timeConfig.unit,
+                                    stepSize: timeConfig.stepSize,
+                                    displayFormats: {
+                                        minute: 'HH:mm',
+                                        hour: 'MMM d HH:mm',
+                                        day: 'MMM d'
+                                    },
+                                    tooltipFormat: 'MMM d, yyyy HH:mm'
+                                }
+                            },
+                            y: {
+                                min: 0,
+                                max: 100,
+                                ticks: {
+                                    callback: function (value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        {% elif graph_type == 'storage' %}
+        fetch(`/api/device/{{ device.device_id }}/storage?time=${timeFrame}`)
+            .then(res => res.json())
+            .then(data => {
+                if (currentChart) {
+                    currentChart.destroy();
+                }
+
+                const ctx = document.getElementById("storageGraph").getContext("2d");
+                currentChart = new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: "Storage Usage %",
+                            data: data.storage,
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            backgroundColor: 'rgba(153, 102, 255, 0.2)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: "time",
+                                time: {
+                                    unit: timeConfig.unit,
+                                    stepSize: timeConfig.stepSize,
+                                    displayFormats: {
+                                        minute: 'HH:mm',
+                                        hour: 'MMM d HH:mm',
+                                        day: 'MMM d'
+                                    },
+                                    tooltipFormat: 'MMM d, yyyy HH:mm'
+                                }
+                            },
+                            y: {
+                                min: 0,
+                                max: 100,
+                                ticks: {
+                                    callback: function (value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        {% endif %}
+    }
+
+    // Initialize graph
+    updateGraph();
+
+    // Handle time frame form submission
+    document.getElementById('timeFrameForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const selectedTime = document.getElementById('timeFrame').value;
+        updateGraph(selectedTime);
     });
 
-    // Update availability graph
-    fetch(`/api/device/{{ device.device_id }}/availability?time=${timeFrame}`)
-    .then(res => res.json())
-    .then(data => {
-        if (currentAvailabilityChart) {
-            currentAvailabilityChart.destroy();
+    function getTimeConfig(timeFrame) {
+        if (timeFrame === '1h') {
+            return { unit: 'minute', stepSize: 5 };
         }
-        
-        const ctx = document.getElementById("availabilityGraph").getContext("2d");
-        currentAvailabilityChart = new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: "Availability",
-                    data: data.availability,
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 0,
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    stepped: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        type: "time",
-                        time: {
-                            unit: "hour",
-                            stepSize: 3
-                        }
-                    },
-                    y: {
-                        min: 0,
-                        max: 1,
-                        ticks: {
-                            callback: function(value) {
-                                return value === 1 ? 'Up' : value === 0 ? 'Down' : '';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    });
+        else if (timeFrame === '6h') {
+            return { unit: 'hour', stepSize: 1 };
+        }
+        else if (timeFrame === '1d') {
+            return { unit: 'hour', stepSize: 3 };
+        }
+        else if (timeFrame === '7d') {
+            return { unit: 'hour', stepSize: 8 };
+        }
+        else if (timeFrame === '30d') {
+            return { unit: 'day', stepSize: 2 };
+        }
 
-    {% elif graph_type == 'processor' %}
-    fetch(`/api/device/{{ device.device_id }}/cpu?time=${timeFrame}`)
-    .then(res => res.json())
-    .then(data => {
-        if (currentChart) {
-            currentChart.destroy();
-        }
-        
-        const ctx = document.getElementById("processorGraph").getContext("2d");
-        currentChart = new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: "CPU Usage %",
-                    data: data.cpu,
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 0,
-                    borderColor: 'rgba(255, 159, 64, 1)',
-                    backgroundColor: 'rgba(255, 159, 64, 0.2)'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        type: "time",
-                        time: {
-                            unit: "hour",
-                            stepSize: 3
-                        }
-                    },
-                    y: {
-                        min: 0,
-                        max: 100,
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    });
-    {% elif graph_type == 'memory' %}
-    fetch(`/api/device/{{ device.device_id }}/memory?time=${timeFrame}`)
-    .then(res => res.json())
-    .then(data => {
-        if (currentChart) {
-            currentChart.destroy();
-        }
-        
-        const ctx = document.getElementById("memoryGraph").getContext("2d");
-        currentChart = new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: "Memory Usage %",
-                    data: data.memory,
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 0,
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        type: "time",
-                        time: {
-                            unit: "hour",
-                            stepSize: 3
-                        }
-                    },
-                    y: {
-                        min: 0,
-                        max: 100,
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    });
-    {% elif graph_type == 'storage' %}
-    fetch(`/api/device/{{ device.device_id }}/storage?time=${timeFrame}`)
-    .then(res => res.json())
-    .then(data => {
-        if (currentChart) {
-            currentChart.destroy();
-        }
-    
-        const ctx = document.getElementById("storageGraph").getContext("2d");
-        currentChart = new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: "Storage Usage %",
-                    data: data.storage,
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 0,
-                    borderColor: 'rgba(153, 102, 255, 1)',
-                    backgroundColor: 'rgba(153, 102, 255, 0.2)'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        type: "time",
-                        time: {
-                            unit: "hour",
-                            stepSize: 3
-                        }
-                    },
-                    y: {
-                        min: 0,
-                        max: 100,
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    });
-    {% endif %}
-}
-
-// Initialize graph
-updateGraph();
-
-// Handle time frame form submission
-document.getElementById('timeFrameForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const selectedTime = document.getElementById('timeFrame').value;
-    updateGraph(selectedTime);
-});
+        return { unit: 'hour', stepSize: 3 }; // default
+    }
 </script>
 
 {% endblock %}
