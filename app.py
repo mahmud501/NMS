@@ -6,6 +6,7 @@ from modules.db import get_db
 from modules.add_devices import add_devices
 from modules.utils import format_time, format_speed, hash_user_password, verify_user_password
 from datetime import datetime, timedelta
+from poller_service import start_polling_service
 import hashlib
 import os
 import mysql.connector
@@ -349,13 +350,34 @@ def device_health(device_id, health_type):
     cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM devices WHERE device_id=%s",(device_id,))
     device = cursor.fetchone()
-    device["formatted_uptime"]=format_time(device["uptime"])
-    cursor.close()
-    db.close()
-
+    
     if not device:
         flash("Device not found!", "warning")
+        cursor.close()
+        db.close()
         return redirect(url_for("dashboard"))
+    
+    # Format device data
+    device["formatted_uptime"] = format_time(device["uptime"]) if device.get("uptime") else "Unknown"
+    
+    # Format timestamps
+    if device.get("last_polled_time"):
+        device["last_polled_time"] = device["last_polled_time"].strftime("%Y-%m-%d %H:%M:%S") if hasattr(device["last_polled_time"], 'strftime') else str(device["last_polled_time"])
+    else:
+        device["last_polled_time"] = "Never"
+    
+    if device.get("last_reboot_time"):
+        device["last_reboot_time"] = device["last_reboot_time"].strftime("%Y-%m-%d %H:%M:%S") if hasattr(device["last_reboot_time"], 'strftime') else str(device["last_reboot_time"])
+    else:
+        device["last_reboot_time"] = "Unknown"
+    
+    if device.get("created_at"):
+        device["created_at"] = device["created_at"].strftime("%Y-%m-%d %H:%M:%S") if hasattr(device["created_at"], 'strftime') else str(device["created_at"])
+    else:
+        device["created_at"] = "Unknown"
+    
+    cursor.close()
+    db.close()
 
     page_title = f"{device['ip_address']} - {health_type.title()} Health"
     

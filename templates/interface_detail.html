@@ -46,7 +46,7 @@
           </div>
         </a>
       </li>
-      <li class="nav-item dropdown">
+      <!-- <li class="nav-item dropdown">
         <a href="#">
           <img src="/static/images/health.png">Health<img src="/static/images/dropdown-icon-1.svg">
           <div class="dropdown-content">
@@ -57,7 +57,7 @@
             <a href="/devices/device/{{device.device_id}}/health/age">Age</a>
           </div>
         </a>
-      </li>
+      </li> -->
       <li class="nav-item dropdown">
         <a href="#">
           <img src="/static/images/ethernet-port.png">Ports<img src="/static/images/dropdown-icon-1.svg">
@@ -332,7 +332,7 @@
     } else if (absBps >= 1e6) {
       return (bps / 1e6).toFixed(1) + ' Mbps';
     } else if (absBps >= 1e3) {
-      return (bps / 1e3).toFixed(0) + ' kbps';
+      return (bps / 1e3).toFixed(1) + ' kbps';
     } else {
       return bps.toFixed(0) + ' bps';
     }
@@ -449,7 +449,8 @@
                   callback: function (value) {
                     return formatTraffic(value);
                   }
-                }
+                },
+                min: 0
               }
             },
             animation: false
@@ -503,7 +504,8 @@
                   callback: function (value) {
                     return formatTraffic(value);
                   }
-                }
+                },
+                min: 0
               }
             },
             animation: false
@@ -557,7 +559,8 @@
                   callback: function (value) {
                     return formatTraffic(value);
                   }
-                }
+                },
+                min: 0
               }
             },
             animation: false

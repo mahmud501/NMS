@@ -871,6 +871,7 @@ body {
 
 /* Device Health CSS */
 .device-health-container {
+    display: none;
     background: var(--surface);
     margin: 10px 0;
     padding: 20px;

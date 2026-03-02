@@ -18,11 +18,11 @@
         <p>{% if device.location|lower!='none' %}{{device.location}}{% endif %}</p>
     </div>
     <div class="device-graph-brief-1">
-        <div style="max-height: 100%">
+        <div class="brief-chart">
             <span style="text-align: center;">Memory usage</span>
             <canvas id="deviceMemoryChart"></canvas>
         </div>
-        <div>
+        <div class="brief-chart">
             <span style="text-align: center;">CPU usage</span>
             <canvas id="deviceCpuChart"></canvas>
         </div>
@@ -46,7 +46,7 @@
                     </div>
                 </a>
             </li>
-            <li class="nav-item dropdown">
+            <!-- <li class="nav-item dropdown">
                 <a href="#">
                     <img src="/static/images/health.png">Health<img src="/static/images/dropdown-icon-1.svg">
                     <div class="dropdown-content">
@@ -57,7 +57,7 @@
                         <a href="/devices/device/{{device.device_id}}/health/age">Age</a>
                     </div>
                 </a>
-            </li>
+            </li> -->
             <li class="nav-item dropdown">
                 <a href="#">
                     <img src="/static/images/ethernet-port.png">Ports<img src="/static/images/dropdown-icon-1.svg">
@@ -182,9 +182,35 @@
     {% elif health_type == 'storage' %}
         <div class="health-metrics">
             <div class="metric-card">
-                <h4>Storage Usage</h4>
-                <div class="metric-value">--</div>
-                <p>Storage monitoring not yet implemented</p>
+                <h4>Current Storage Usage</h4>
+                <div class="metric-value" id="current-storage">--</div>
+                <div class="metric-chart">
+                    <canvas id="storageHealthChart"></canvas>
+                </div>
+            </div>
+            <div class="metric-stats">
+                <table class="health-stats-table">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                        <th>Status</th>
+                    </tr>
+                    <tr>
+                        <td>Average (24h)</td>
+                        <td id="avg-storage">--</td>
+                        <td id="avg-storage-status">--</td>
+                    </tr>
+                    <tr>
+                        <td>Peak (24h)</td>
+                        <td id="peak-storage">--</td>
+                        <td id="peak-storage-status">--</td>
+                    </tr>
+                    <tr>
+                        <td>Current</td>
+                        <td id="current-storage-table">--</td>
+                        <td id="current-storage-table-status">--</td>
+                    </tr>
+                </table>
             </div>
         </div>
     {% elif health_type == 'status' %}
@@ -473,11 +499,78 @@ function updateHealthData(timeFrame = '1d') {
             }
         });
     });
+    {% elif health_type == 'storage' %}
+    fetch(`/api/device/{{ device.device_id }}/storage?time=${timeFrame}`)
+    .then(res => res.json())
+    .then(data => {
+        // Calculate stats
+        const storageValues = data.storage.filter(v => v !== null && v !== undefined);
+        const avgStorage = storageValues.length > 0 ? (storageValues.reduce((a, b) => a + b, 0) / storageValues.length).toFixed(1) : 0;
+        const peakStorage = storageValues.length > 0 ? Math.max(...storageValues).toFixed(1) : 0;
+        const currentStorage = storageValues.length > 0 ? storageValues[storageValues.length - 1].toFixed(1) : 0;
+
+        // Update display
+        document.getElementById('current-storage').textContent = currentStorage + '%';
+        document.getElementById('avg-storage').textContent = avgStorage + '%';
+        document.getElementById('peak-storage').textContent = peakStorage + '%';
+        document.getElementById('current-storage-table').textContent = currentStorage + '%';
+
+        // Status indicators
+        const getStatus = (value) => value > 90 ? 'Critical' : value > 75 ? 'Warning' : 'Normal';
+        document.getElementById('avg-storage-status').textContent = getStatus(avgStorage);
+        document.getElementById('peak-storage-status').textContent = getStatus(peakStorage);
+        document.getElementById('current-storage-table-status').textContent = getStatus(currentStorage);
+
+        // Chart
+        if (currentHealthChart) {
+            currentHealthChart.destroy();
+        }
+        
+        const ctx = document.getElementById("storageHealthChart").getContext("2d");
+        currentHealthChart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: "Storage Usage %",
+                    data: data.storage,
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: "time",
+                        time: {
+                            unit: "hour",
+                            stepSize: 3
+                        }
+                    },
+                    y: {
+                        min: 0,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
     {% endif %}
 }
 
 // Initialize health data
-{% if health_type == 'processor' or health_type == 'memory' %}
+{% if health_type == 'processor' or health_type == 'memory' or health_type == 'storage' %}
 updateHealthData();
 {% endif %}
 
