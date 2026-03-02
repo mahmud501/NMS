@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, json
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from modules.reports import generate_availability_report, generate_performance_report, create_pdf_report, save_report_to_db
+from modules.reports import create_pdf_report, generate_availability_report, generate_device_pdf, generate_performance_report, create_pdf_report, save_report_to_db, generate_device_timeline, build_timeline, generate_device_pdf, generate_device_performance, generate_device_performance_pdf
 from modules.alerts import check_alerts, get_active_alerts, acknowledge_alert, resolve_alert, ignore_alert
 from modules.db import get_db
 from modules.add_devices import add_devices
@@ -834,10 +834,31 @@ def alerts():
 @login_required
 def api_generate_report(report_type):
     try:
+        req = request.get_json() or {}
         if report_type == "availability":
             data = generate_availability_report()
         elif report_type == "performance":
             data = generate_performance_report()
+        elif report_type == "device_timeline":
+            device_id = req.get("device_id")
+            start_date = req.get("start_date")
+            end_date = req.get("end_date")
+            if start_date:
+                start_date = datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S")
+            if end_date:
+                end_date = datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S")
+            rows = generate_device_timeline(device_id, start_date, end_date)
+            data = build_timeline(rows, end_date)
+        elif report_type == "device_performance":
+            device_id = req.get("device_id")
+            perf_start_date = req.get("start_date")
+            perf_end_date = req.get("end_date")
+            if perf_start_date:
+                perf_start_date = datetime.strptime(perf_start_date, "%Y-%m-%d %H:%M:%S")
+            if perf_end_date:
+                perf_end_date = datetime.strptime(perf_end_date, "%Y-%m-%d %H:%M:%S")
+            data = generate_device_performance(device_id, perf_start_date, perf_end_date)
+
         else:
             return jsonify({"success": False, "error": "Invalid report type"})
 
@@ -850,7 +871,12 @@ def api_generate_report(report_type):
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
         # Generate PDF
-        create_pdf_report(report_type, data, filepath)
+        if report_type == "device_timeline":
+            generate_device_pdf(data, rows, filepath)
+        elif report_type == "device_performance":
+            generate_device_performance_pdf(data, filepath, perf_start_date, perf_end_date)
+        else:
+            create_pdf_report(report_type, data, filepath)
 
         # Save to database
         save_report_to_db(f"{report_type.title()} Report", report_type, {}, current_user.id, filepath)
@@ -889,7 +915,15 @@ def api_check_alerts():
 @app.route("/reports")
 @login_required
 def reports():
-    return render_template("reports.html")
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT device_id, ip_address, hostname FROM devices
+    """)
+    devices=cursor.fetchall()
+    cursor.close()
+    db.close()  
+    return render_template("reports.html", devices=devices)
 
 @app.route("/reports/availability")
 @login_required

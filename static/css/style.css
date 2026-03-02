@@ -196,12 +196,14 @@ body {
     max-height: 250px;
     overflow-y: auto;
 }
+
 .search-item {
     padding: 8px;
     cursor: pointer;
 }
 .search-item:hover{
-    background-color: #f1f1f1;
+    color: white;
+    background: linear-gradient(135deg, rgba(27, 121, 165, 0.836) 0%, rgba(78, 70, 229, 0.945) 100%);;
 }
 
 .nav-menu {

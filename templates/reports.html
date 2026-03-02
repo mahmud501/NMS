@@ -24,6 +24,40 @@
             </button>
             <a href="/reports/performance" class="btn btn-secondary">View Current Data</a>
         </div>
+        <div class="report-card">
+            <h3>Device Specific Availability Report</h3>
+            <p>Generate a report for a specific device.</p>
+            <select id="device-select" class="form-control">
+                <option value="">Select a Device</option>
+                {% for device in devices %}
+                <option value="{{ device.device_id }}">{{ device.ip_address }} - {{ device.hostname }}</option>
+                {% endfor %}
+            </select>
+            <label for="start-time">Start Date:</label>
+            <input type="datetime-local" id="start-time" class="form-control" placeholder="Start Date">
+            <label for="end-time">End Date:</label>
+            <input type="datetime-local" id="end-time" class="form-control" placeholder="End Date">
+            <button class="btn btn-primary generate-device-report" data-type="device_timeline">
+                Generate Device Timeline Report
+            </button>
+        </div>
+        <div class="report-card">
+            <h3>Device Specific Performance Report</h3>
+            <p>Generate a report for a specific device.</p>
+            <select id="perf-device-select" class="form-control">
+                <option value="">Select a Device</option>
+                {% for device in devices %}
+                <option value="{{ device.device_id }}">{{ device.ip_address }} - {{ device.hostname }}</option>
+                {% endfor %}
+            </select>
+            <label for="perf-start-time">Start Date:</label>
+            <input type="datetime-local" id="perf-start-time" class="form-control" placeholder="Start Date">
+            <label for="perf-end-time">End Date:</label>
+            <input type="datetime-local" id="perf-end-time" class="form-control" placeholder="End Date">
+            <button class="btn btn-primary generate-perf-report" data-type="device_performance">
+                Generate Device Performance Report
+            </button>
+        </div>
     </div>
 
     <div id="report-status" style="display: none;">
@@ -41,45 +75,158 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.generate-report').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const reportType = this.dataset.type;
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.generate-report').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const reportType = this.dataset.type;
 
-            // Show loading status
-            document.getElementById('report-status').style.display = 'block';
-            document.getElementById('report-result').style.display = 'none';
+                // Show loading status
+                document.getElementById('report-status').style.display = 'block';
+                document.getElementById('report-result').style.display = 'none';
 
-            // Disable buttons
-            document.querySelectorAll('.generate-report').forEach(b => b.disabled = true);
+                // Disable buttons
+                document.querySelectorAll('button').forEach(b => b.disabled = true);
 
-            fetch(`/api/reports/generate/${reportType}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+                fetch(`/api/reports/generate/${reportType}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({})
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('report-status').style.display = 'none';
+
+                        if (data.success) {
+                            document.getElementById('report-result').style.display = 'block';
+                            document.getElementById('download-link').href = data.file;
+                        } else {
+                            alert('Error generating report: ' + (data.error || 'Unknown error'));
+                        }
+
+                        // Re-enable buttons
+                        document.querySelectorAll('button').forEach(b => b.disabled = false);
+                    })
+                    .catch(error => {
+                        document.getElementById('report-status').style.display = 'none';
+                        alert('Error generating report');
+                        document.querySelectorAll('button').forEach(b => b.disabled = false);
+                    });
+            });
+        });
+        document.querySelectorAll('.generate-device-report').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const reportType = this.dataset.type;
+
+                const deviceId = document.getElementById("device-select").value;
+                let start = document.getElementById("start-time").value;
+                let end = document.getElementById("end-time").value;
+                start = start.replace("T", " ") + ":00";
+                end = end.replace("T", " ") + ":00";
+
+                if (!deviceId || !start || !end) {
+                    alert("Select device and time");
+                    return;
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('report-status').style.display = 'none';
+                // Show loading status
+                document.getElementById('report-status').style.display = 'block';
+                document.getElementById('report-result').style.display = 'none';
 
-                if (data.success) {
-                    document.getElementById('report-result').style.display = 'block';
-                    document.getElementById('download-link').href = data.file;
-                } else {
-                    alert('Error generating report: ' + (data.error || 'Unknown error'));
+                // Disable buttons
+                document.querySelectorAll('.report').forEach(b => b.disabled = true);
+
+                fetch(`/api/reports/generate/${reportType}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        device_id: deviceId,
+                        start_date: start,
+                        end_date: end
+                    })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        document.getElementById('report-status').style.display = 'none';
+                        document.getElementById('device-select').value = "";
+                        document.getElementById("start-time").value = "";
+                        document.getElementById("end-time").value = "";
+
+                        if (data.success) {
+                            document.getElementById('report-result').style.display = 'block';
+                            document.getElementById('download-link').href = data.file;
+                        } else {
+                            alert('Error generating report: ' + (data.error || 'Unknown error'));
+                        }
+
+                        // Re-enable buttons
+                        document.querySelectorAll('button').forEach(b => b.disabled = false);
+                    })
+                    .catch(error => {
+                        document.getElementById('report-status').style.display = 'none';
+                        alert('Error generating report');
+                        document.querySelectorAll('button').forEach(b => b.disabled = false);
+                    });
+            });
+        });
+        document.querySelectorAll('.generate-perf-report').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const reportType = this.dataset.type;
+
+                const deviceId = document.getElementById("perf-device-select").value;
+                let start = document.getElementById("perf-start-time").value;
+                let end = document.getElementById("perf-end-time").value;
+
+                if (!deviceId || !start || !end) {
+                    alert("Select device and time");
+                    return;
                 }
 
-                // Re-enable buttons
-                document.querySelectorAll('.generate-report').forEach(b => b.disabled = false);
-            })
-            .catch(error => {
-                document.getElementById('report-status').style.display = 'none';
-                alert('Error generating report');
-                document.querySelectorAll('.generate-report').forEach(b => b.disabled = false);
+                start = start.replace("T", " ") + ":00";
+                end = end.replace("T", " ") + ":00";
+
+                document.getElementById('report-status').style.display = 'block';
+                document.getElementById('report-result').style.display = 'none';
+
+                document.querySelectorAll('button').forEach(b => b.disabled = true);
+
+                fetch(`/api/reports/generate/${reportType}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        device_id: deviceId,
+                        start_date: start,
+                        end_date: end
+                    })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        document.getElementById('report-status').style.display = 'none';
+                        document.getElementById('perf-device-select').value = "";
+                        document.getElementById("perf-start-time").value = "";
+                        document.getElementById("perf-end-time").value = "";
+
+
+                        if (data.success) {
+                            document.getElementById('report-result').style.display = 'block';
+                            document.getElementById('download-link').href = data.file;
+                        } else {
+                            alert('Error generating report: ' + (data.error || 'Unknown error'));
+                        }
+
+                        document.querySelectorAll('button').forEach(b => b.disabled = false);
+                    })
+                    .catch(error => {
+                        document.getElementById('report-status').style.display = 'none';
+                        alert('Error generating report');
+                        document.querySelectorAll('button').forEach(b => b.disabled = false);
+                    });
             });
         });
     });
-});
 </script>
 {% endblock %}
