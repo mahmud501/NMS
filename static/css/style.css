@@ -869,6 +869,37 @@ body {
     margin-top: 20px;
 }
 
+/* Device Syslog CSS */
+.device-syslog-container {
+    background: var(--surface);
+    margin: 10px 0;
+    padding: 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    border-top: 4px solid linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    transition: all 0.3s ease;
+}
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    gap: 10px;
+    background: rgb(230, 228, 228);
+    color: rgb(12, 12, 12);
+}
+.syslog-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.syslog-table th {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    font-weight: 600;
+    padding: 12px;
+}
+
+
 /* Device Health CSS */
 .device-health-container {
     display: none;

@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}NMS - {{page_title}}{% endblock %}
+
+{% block content %}
+
+<div class="gap-view"></div>
+
+<div class="device-detail-brief {{device.status|lower}}">
+    <div class="medium-vendor-icon">
+        <img src=" {% if device.vendor|lower=='cisco' %}/static/images/cisco.png
+                    {% elif device.vendor|lower=='mikrotik' %}/static/images/mikrotik.png
+                    {%elif device.vendor|lower=='linux'%}/static/images/linux.png
+                    {%else%}/static/images/router.png{% endif %}" alt="vendor_icon">
+    </div>
+    <div class="device-ip-brief-1">
+        <a href="/devices/device/{{device.device_id}}">{{device.ip_address}}</a>
+        <p>{% if device.location|lower!='none' %}{{device.location}}{% endif %}</p>
+    </div>
+    <div class="device-graph-brief-1">
+        <div style="max-height: 100%">
+            <span style="text-align: center;">Memory usage</span>
+            <canvas id="deviceMemoryChart"></canvas>
+        </div>
+        <div>
+            <span style="text-align: center;">CPU usage</span>
+            <canvas id="deviceCpuChart"></canvas>
+        </div>
+    </div>
+</div>
+<div class="device-detail-nav-1">
+    <div class="device-nav-bar-1">
+        <ul class="nav-menu-2">
+            <li class="nav-item-2 nav-item dropdown">
+                <a href="#"><img src="/static/images/overview-1.png">Overview</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="#">
+                    <img src="/static/images/graph.png">Graphs<img src="/static/images/dropdown-icon-1.svg">
+                    <div class="dropdown-content">
+                        <a href="/devices/device/{{device.device_id}}/graphs/system">System</a>
+                        <a href="/devices/device/{{device.device_id}}/graphs/processor">Processor</a>
+                        <a href="/devices/device/{{device.device_id}}/graphs/memory">Memory</a>
+                        <a href="/devices/device/{{device.device_id}}/graphs/storage">Storage</a>
+                    </div>
+                </a>
+            </li>
+            <!-- <li class="nav-item dropdown">
+                <a href="#">
+                    <img src="/static/images/health.png">Health<img src="/static/images/dropdown-icon-1.svg">
+                    <div class="dropdown-content">
+                        <a href="/devices/device/{{device.device_id}}/health/processor">Processor</a>
+                        <a href="/devices/device/{{device.device_id}}/health/memory">Memory</a>
+                        <a href="/devices/device/{{device.device_id}}/health/storage">Storage</a>
+                        <a href="/devices/device/{{device.device_id}}/health/status">Status</a>
+                        <a href="/devices/device/{{device.device_id}}/health/age">Age</a>
+                    </div>
+                </a>
+            </li> -->
+            <li class="nav-item dropdown">
+                <a href="#">
+                    <img src="/static/images/ethernet-port.png">Ports<img src="/static/images/dropdown-icon-1.svg">
+                </a>
+                <div class="dropdown-content">
+                    <a href="/devices/device/{{device.device_id}}/ports">Details</a>
+                    <hr>
+                    <a href="/devices/device/{{device.device_id}}/ports/ip">IP Address</a>
+                    <a href="/devices/device/{{device.device_id}}/ports/arp">ARP Table</a>
+                    <a href="/devices/device/{{device.device_id}}/ports/neighbors">Neighbours</a>
+                </div>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="/devices/device/{{device.device_id}}/alerts"><img
+                        src="/static/images/notification.png">Alerts</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="/devices/device/{{device.device_id}}/syslog">Syslog</a>
+            </li>
+        </ul>
+    </div>
+    <div class="nav-right-2">
+        <ul class="nav-menu-3">
+            <li class="nav-item-2 nav-item dropdown">
+                <img src="/static/images/settings.png">
+                <img src="/static/images/dropdown-icon-1.svg">
+                <div class="dropdown-content-right">
+                    <a href="/devices/device/{{device.device_id}}/properties">Properties</a>
+                    <hr>
+                    <a href="#">Ignore</a>
+                    {% if current_user.role_name == 'admin' %}
+                    <a href="/device/delete">Delete Device</a>
+                    {% endif %}
+                </div>
+            </li>
+        </ul>
+    </div>
+
+</div>
+<div class="device-syslog-container">
+    <h2>Syslog</h2>
+    <div class="pagination">
+        {% if syslog_entries %}
+        {% if page > 1 %}
+        <a href="{{ url_for('device_syslog', device_id=device.device_id, page=page-1) }}">« Prev</a>
+        {% endif %}
+        {% set start_page = 1 if page<=3 else page-2 %}
+        {% set end_page = start_page+4 if start_page+4 < total_pages else total_pages %}
+        {% for p in range(start_page, end_page + 1) %}
+        {% if p == page %}
+        <strong>{{ p }}</strong>
+        {%else%}
+        <a href="{{ url_for('device_syslog', device_id=device.device_id, page=p) }}">{{ p }} </a>
+        {% endif %}
+        {% endfor %}
+
+        {% if page < total_pages %} <a href="{{ url_for('device_syslog', device_id=device.device_id, page=page+1) }}">
+            Next »</a>
+            {% endif %}
+
+    </div>
+    <div class="syslog-container">
+        <table class="syslog-table">
+            <thead>
+                <tr>
+                    <th>Date-Time</th>
+                    <th>Device</th>
+                    <th>Priority</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in syslog_entries %}
+                <tr>
+                    <td>{{ log.timestamp }}</td>
+                    <td>{{ device.ip_address }}</td>
+                    <td>{{ log.severity_text }}</td>
+                    <td>{{ log.message }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No syslog entries found for this device.</p>
+        {% endif %}
+    </div>
+
+
+    <script>
+        fetch("/api/device/{{ device.device_id }}/memory")
+            .then(res => res.json())
+            .then(data => {
+                const ctx = document.getElementById("deviceMemoryChart").getContext("2d");
+
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.memory,
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 0,
+                            pointHoverRadius: 0,
+                            hitRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+
+                        events: [],
+                        hover: { mode: null },
+                        interaction: { mode: null },
+
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: false }
+                        },
+
+                        scales: {
+                            x: {
+                                type: "time",
+                                ticks: { display: false },
+                                grid: { display: false },
+                                border: { display: false },
+                                title: { display: false }
+                            },
+                            y: {
+                                min: 0,
+                                max: 100,
+                                ticks: { display: false },
+                                grid: { display: false },
+                                border: { display: false },
+                                title: { display: false }
+                            }
+                        },
+
+                        animation: false,
+
+                        elements: {
+                            line: {
+                                borderJoinStyle: 'round'
+                            }
+                        }
+                    }
+                });
+            });
+
+        fetch("/api/device/{{ device.device_id }}/cpu")
+            .then(res => res.json())
+            .then(data => {
+                const ctx = document.getElementById("deviceCpuChart").getContext("2d");
+
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.cpu,
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 0,
+                            pointHoverRadius: 0,
+                            hitRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+
+                        events: [],
+                        hover: { mode: null },
+                        interaction: { mode: null },
+
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: false }
+                        },
+
+                        scales: {
+                            x: {
+                                type: "time",
+                                ticks: { display: false },
+                                grid: { display: false },
+                                border: { display: false },
+                                title: { display: false }
+                            },
+                            y: {
+                                min: 0,
+                                max: 100,
+                                ticks: { display: false },
+                                grid: { display: false },
+                                border: { display: false },
+                                title: { display: false }
+                            }
+                        },
+
+                        animation: false,
+
+                        elements: {
+                            line: {
+                                borderJoinStyle: 'round'
+                            }
+                        }
+                    }
+                });
+            });
+    </script>
+    {% endblock %}

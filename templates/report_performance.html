@@ -57,10 +57,21 @@
                     </td>
 
                     <!-- Disk Usage (placeholder) -->
-                    <td>N/A</td>
+                    <td>{% if device.avg_disk %}
+                            <div class="metric-display">
+                                <div class="metric-bar">
+                                    <div class="metric-fill disk-fill" style="width: {{ device.avg_disk }}%;"></div>
+                                </div>
+                                <span class="metric-text">
+                                    {{ "%.1f"|format(device.avg_disk) }}% (Max: {{ "%.1f"|format(device.max_disk) }}%)
+                                </span>
+                            </div>
+                        {% else %}
+                            N/A
+                        {% endif %}</td>
 
                     <!-- Samples (placeholder) -->
-                    <td>N/A</td>
+                    <td>{{ device.samples }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

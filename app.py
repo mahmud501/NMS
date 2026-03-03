@@ -440,6 +440,50 @@ def device_properties(device_id):
                          page_title=page_title, 
                          device=device)
 
+
+@app.route("/devices/device/<int:device_id>/syslog")
+@login_required
+def device_syslog(device_id):
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    offset = (page - 1) * per_page
+
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM devices WHERE device_id=%s",(device_id,))
+    device = cursor.fetchone()
+
+    cursor.execute("SELECT COUNT(*) AS total FROM   syslog_messages WHERE device_id = %s", (device_id,))
+    total_rows = cursor.fetchone()['total']
+    total_pages = (total_rows + per_page - 1) // per_page
+    
+    # Get syslog entries for this device
+    cursor.execute("""
+        SELECT message, severity, severity_text,facility, timestamp
+        FROM syslog_messages
+        WHERE device_id = %s
+        AND timestamp >= NOW() - INTERVAL 7 DAY
+        ORDER BY timestamp DESC
+        LIMIT %s OFFSET %s
+    """, (device_id, per_page, offset))
+    syslog_entries = cursor.fetchall()
+    
+    cursor.close()
+    db.close()
+
+    if not device:
+        flash("Device not found!", "warning")
+        return redirect(url_for("dashboard"))
+
+    page_title = f"{device['ip_address']} - Syslog"
+    
+    return render_template("device_syslog.html", 
+                         page_title=page_title, 
+                         device=device, 
+                         syslog_entries=syslog_entries,
+                         total_pages=total_pages,
+                         page=page)
+
 @app.route("/devices/device/<int:device_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_device(device_id):

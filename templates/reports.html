@@ -5,7 +5,18 @@
 {% block content %}
 <div class="reports-container">
     <h2>Reports</h2>
+    <div id="report-status" style="display: none;">
+        <div class="alert alert-info">
+            Generating report... Please wait.
+        </div>
+    </div>
 
+    <div id="report-result" style="display: none;">
+        <div class="alert alert-success">
+            Report generated successfully!
+            <a id="download-link" href="#" target="_blank" class="btn btn-sm btn-success">Download PDF</a>
+        </div>
+    </div>
     <div class="report-cards">
         <div class="report-card">
             <h3>Availability Report</h3>
@@ -57,19 +68,6 @@
             <button class="btn btn-primary generate-perf-report" data-type="device_performance">
                 Generate Device Performance Report
             </button>
-        </div>
-    </div>
-
-    <div id="report-status" style="display: none;">
-        <div class="alert alert-info">
-            Generating report... Please wait.
-        </div>
-    </div>
-
-    <div id="report-result" style="display: none;">
-        <div class="alert alert-success">
-            Report generated successfully!
-            <a id="download-link" href="#" target="_blank" class="btn btn-sm btn-success">Download PDF</a>
         </div>
     </div>
 </div>

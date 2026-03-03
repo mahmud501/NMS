@@ -32,7 +32,7 @@
 <div class="device-detail-nav-1">
     <div class="device-nav-bar-1">
         <ul class="nav-menu-2">
-            <li class="nav-item-2">
+            <li class="nav-item-2 nav-item dropdown">
                 <a href="/devices/device/{{device.device_id}}"><img src="/static/images/overview-1.png">Overview</a>
             </li>
             <li class="nav-item dropdown">
@@ -70,14 +70,17 @@
                     </div>
                 </a>
             </li>
-            <li>
+            <li class="nav-item dropdown">
                 <a href="/devices/device/{{device.device_id}}/alerts"><img src="/static/images/notification.png">Alerts</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a href="/devices/device/{{device.device_id}}/syslog">Syslog</a>
             </li>
         </ul>
     </div>
     <div class="nav-right-2">
         <ul class="nav-menu-3">
-            <li class="nav-item-2 dropdown">
+            <li class="nav-item-2 nav-item dropdown">
                 <img src="/static/images/settings.png">
                 <img src="/static/images/dropdown-icon-1.svg">
                 <div class="dropdown-content-right">
