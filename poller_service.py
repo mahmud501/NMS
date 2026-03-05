@@ -48,13 +48,13 @@ def start_polling_service():
                 print(f"Error during health polling: {e}")
             last_health_poll = current_time
 
-        if current_time - last_arp_poll >= 420: 
+        if current_time - last_arp_poll >= 600: 
             try:
                 poll_arp()
             except Exception as e:
                 print(f"Error during ARP polling: {e}")
             last_arp_poll = current_time
-        if current_time - last_cdp_poll >= 1800:
+        if current_time - last_cdp_poll >= 600:
             try:
                 poll_cdp()
             except Exception as e:

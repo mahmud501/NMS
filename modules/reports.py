@@ -268,6 +268,7 @@ def build_timeline(rows, report_end_time):
     return timeline
 
 def generate_device_pdf(timeline, data, filename):
+    reports_dir = os.path.join("static", "reports")
     doc = SimpleDocTemplate(filename)
     story = []
 
@@ -285,7 +286,7 @@ def generate_device_pdf(timeline, data, filename):
     plt.title("Device Availability Timeline")
     plt.legend()
     plt.xticks(rotation=45)
-    chart_path = "temp_timeline_chart.png"
+    chart_path = os.path.join(reports_dir, "temp_timeline_chart.png")
     plt.tight_layout()
     plt.savefig(chart_path)
     plt.close()
@@ -318,6 +319,8 @@ def generate_device_pdf(timeline, data, filename):
 
     story.append(table)
     doc.build(story)
+    if os.path.exists(chart_path):
+        os.remove(chart_path)
 
 def generate_device_performance(device_id=None, start_date=None, end_date=None):
     if not start_date:

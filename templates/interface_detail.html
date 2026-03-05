@@ -70,8 +70,11 @@
           </div>
         </a>
       </li>
-      <li clasc="nav-item dropdown">
+      <li class="nav-item dropdown">
         <a href="/devices/device/{{device.device_id}}/alerts"><img src="/static/images/notification.png">Alerts</a>
+      </li>
+      <li class="nav-item dropdown">
+        <a href="/devices/device/{{device.device_id}}/syslog">Syslog</a>
       </li>
     </ul>
   </div>
@@ -95,7 +98,13 @@
 
 <div class="interface-detail-container">
   <div class="interface-header">
-    <h2>{{interface.name}} - Traffic Details</h2>
+    <div class="interface-graph-select">
+      <div>
+        <h2>{{interface.name}} - Traffic Details</h2>
+      </div>
+      <!-- <div class="traffic-graph"><button class="btn btn-primary" id="traffic_graph">Graphs</button></div>
+      <div class="traffic-live"><button class="btn btn-primary" id="traffic_live">Real Time</button></div> -->
+    </div>
     <div class="interface-info">
       <div class="info-item">
         <span class="info-label">Description:</span>
@@ -317,6 +326,26 @@
           }
         }
       });
+    });
+    document.addEventListener('DOMContentLoaded',function() {
+        const trafficGraph = document.getElementById('traffic_graph');
+        const trafficLive = document.getElementById('traffic_live');
+        const addAlertDown = document.querySelector('.add-alert-down');
+        const addAlertUsage = document.querySelector('.add-alert-usage');
+        trafficGraph.style.background = 'darkgreen';
+        trafficLive.onclick = function() {
+            trafficGraph.style.background = 'blue';
+            trafficLive.style.background = 'darkgreen';
+            addAlertUsage.style.display = 'block';
+            addAlertDown.style.display = 'none';
+        };
+        trafficGraph.onclick = function() {
+            trafficGraph.style.background = 'darkgreen';
+            trafficLive.style.background = 'blue';
+            addAlertUsage.style.display = 'none';
+            addAlertDown.style.display = 'block';
+        };
+
     });
 
   let trafficChart = null;

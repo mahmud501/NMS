@@ -5,6 +5,7 @@ from modules.alerts import check_alerts, get_active_alerts, acknowledge_alert, r
 from modules.db import get_db
 from modules.add_devices import add_devices
 from modules.utils import format_time, format_speed, hash_user_password, verify_user_password
+from modules.live_interface_bw_poller import poll_interface_bandwidth
 from datetime import datetime, timedelta
 from poller_service import start_polling_service
 import hashlib
@@ -1601,6 +1602,17 @@ def change_password():
             db.close()
     
     return render_template("change_password.html")
+
+@app.route("/test")
+def test():
+    return render_template("test.html")
+
+@app.route("/api/live_traffic")
+def live_traffic():
+    in_bps, out_bps = poll_interface_bandwidth(59, 2)
+    return jsonify({"in_bps": in_bps, "out_bps": out_bps})
+
+    
 
 if __name__ == "__main__":
     app.run(debug=True)

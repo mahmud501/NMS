@@ -70,7 +70,13 @@
     color: #6b7280;
     font-weight: 500;
 }
-
+/* interface traffic */
+.interface-graph-select{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
 /* report_performance.html */
 .metric-display { 
     display: flex; 
@@ -106,11 +112,12 @@
 }
 
 /* users.html */
-.add-user-container, .add-notification-container { 
+.add-user-container, .add-notification-container,.add-device-container {
     display: flex; 
     justify-content: center; 
     padding: 20px;
 }
+
 .edit-user-container { 
     display: flex; 
     justify-content: center; 
