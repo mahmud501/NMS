@@ -35,7 +35,7 @@ def start_polling_service():
 
     while True:
         current_time = time.time()
-        if current_time - last_availability_poll >= 180:  # 5 minutes
+        if current_time - last_availability_poll >= 180:  # 3 minutes
             try:
                 poll_device_availability()
             except Exception as e:
@@ -69,11 +69,11 @@ def start_polling_service():
             last_interface_poll = current_time
 
         # Check for alerts every 5 minutes
-        if current_time - last_availability_poll >= 300:
-            try:
-                check_alerts()
-            except Exception as e:
-                print(f"Error during alert checking: {e}")
+        # if current_time - last_availability_poll >= 300:
+        #     try:
+        #         check_alerts()
+        #     except Exception as e:
+        #         print(f"Error during alert checking: {e}")
             
         time.sleep(30) # Sleep for 1 minute between checks
 

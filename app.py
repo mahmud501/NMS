@@ -496,19 +496,43 @@ def edit_device(device_id):
     cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM devices WHERE device_id=%s",(device_id,))
     device = cursor.fetchone()
-    cursor.close()
-    db.close()
-
+    
     if not device:
+        cursor.close()
+        db.close()
         flash("Device not found!", "warning")
         return redirect(url_for("dashboard"))
 
     if request.method == "POST":
-        # Handle device update logic here
-        # For now, just redirect back to properties
-        flash("Device update functionality not yet implemented", "info")
+
+        hostname = request.form.get("hostname")
+        location = request.form.get("location")
+        description = request.form.get("description")
+
+        try:
+            cursor.execute("""
+                UPDATE devices
+                SET hostname=%s,
+                    location=%s,
+                    description=%s
+                WHERE device_id=%s
+            """, (hostname, location, description, device_id))
+
+            db.commit()
+
+            flash("Device updated successfully!", "success")
+
+        except Exception as e:
+            db.rollback()
+            flash(f"Error updating device: {str(e)}", "error")
+
+        cursor.close()
+        db.close()
+
         return redirect(url_for('device_properties', device_id=device_id))
 
+    cursor.close()
+    db.close()
     page_title = f"Edit {device['ip_address']}"
     
     return render_template("edit_device.html", 
